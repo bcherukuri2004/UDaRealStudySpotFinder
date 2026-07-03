@@ -61,26 +61,26 @@ const Index = () => {
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="px-6 py-4">
+        <div className="px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-gradient-primary rounded-xl flex items-center justify-center">
-                <MapPin className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-primary rounded-xl flex items-center justify-center">
+                <MapPin className="h-8 w-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold">Study Spots</h1>
+              <h1 className="text-3xl font-bold">Study Spots</h1>
             </div>
 
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="hidden sm:flex text-sm px-3 py-1.5 gap-1.5">
-                <Coffee className="h-4 w-4" />
+              <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
+                <Coffee className="h-5 w-5" />
                 {places.filter(p => p.types.includes('cafe')).length} Cafes
               </Badge>
-              <Badge variant="secondary" className="hidden sm:flex text-sm px-3 py-1.5 gap-1.5">
-                <BookOpen className="h-4 w-4" />
+              <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
+                <BookOpen className="h-5 w-5" />
                 {places.filter(p => p.types.includes('library')).length} Libraries
               </Badge>
-              <Badge variant="secondary" className="text-sm px-3 py-1.5 gap-1.5">
-                <Clock className="h-4 w-4" />
+              <Badge variant="secondary" className="text-base px-4 py-2 gap-2">
+                <Clock className="h-5 w-5" />
                 {openPlaces.length} Open Now
               </Badge>
             </div>
