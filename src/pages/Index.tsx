@@ -223,7 +223,11 @@ const Index = () => {
                             </div>
                             <div className="flex items-center gap-1.5">
                               <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span>{expandedPlace.travel_time.walking_min} min walk</span>
+                              <span>
+                                {filters.transportMode === 'walking'
+                                  ? `${expandedPlace.travel_time.walking_min} min walk`
+                                  : `${expandedPlace.travel_time.driving_min} min drive`}
+                              </span>
                             </div>
                           </div>
 
