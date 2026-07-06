@@ -161,7 +161,6 @@ const Index = () => {
                     <div key={place.id}>
                       <PlaceCard
                         place={place}
-                        variant="compact"
                         onSelect={(id) => setSelectedPlace(selectedPlace === id ? null : id)}
                         transportMode={filters.transportMode}
                         isSelected={selectedPlace === place.id}

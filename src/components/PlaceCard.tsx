@@ -1,17 +1,15 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Wifi, 
-  Zap, 
-  Volume2, 
-  Armchair, 
-  Star, 
-  Clock, 
+import {
+  Wifi,
+  Zap,
+  Volume2,
+  Armchair,
+  Star,
+  Clock,
   DollarSign,
-  MapPin,
-  ExternalLink
+  MapPin
 } from 'lucide-react';
 
 interface PlaceCardProps {
@@ -36,7 +34,6 @@ interface PlaceCardProps {
     badges?: string[];
     photo_url?: string;
   };
-  variant?: 'compact' | 'detailed';
   onSelect?: (placeId: string) => void;
   transportMode?: 'walking' | 'driving';
   isSelected?: boolean;
@@ -44,7 +41,6 @@ interface PlaceCardProps {
 
 const PlaceCard: React.FC<PlaceCardProps> = ({
   place,
-  variant = 'compact',
   onSelect,
   transportMode = 'walking',
   isSelected = false,
@@ -171,27 +167,8 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 ))}
               </div>
             )}
-
-            {variant === 'detailed' && (
-              <p className="text-sm text-muted-foreground mt-2 truncate">
-                {place.address}
-              </p>
-            )}
           </div>
         </div>
-
-        {variant === 'detailed' && (
-          <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
-            <Button variant="outline" size="sm" className="flex-1">
-              <ExternalLink className="h-3 w-3 mr-1" />
-              Details
-            </Button>
-            <Button size="sm" className="flex-1">
-              <MapPin className="h-3 w-3 mr-1" />
-              Directions
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
