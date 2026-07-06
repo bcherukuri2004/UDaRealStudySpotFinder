@@ -57,6 +57,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   };
 
   const getAmenityColor = (type: string, score: number) => {
+    if (type === 'noise') {
+      if (score <= 2.0) return 'text-green-600';
+      if (score <= 3.5) return 'text-warning';
+      return 'text-destructive';
+    }
     if (score >= 4.0) return `amenity-${type}`;
     if (score >= 3.0) return 'text-warning';
     return 'text-muted-foreground';
