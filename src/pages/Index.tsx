@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 
 const Index = () => {
-  const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number} | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string>('');
@@ -262,7 +261,7 @@ const Index = () => {
 
         {/* Map */}
         <div className="flex-1">
-          <Map onLocationSelect={(lat, lng) => setSelectedLocation({ lat, lng })} mapboxToken={mapboxToken} />
+          <Map mapboxToken={mapboxToken} />
         </div>
       </div>
 
