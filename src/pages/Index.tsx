@@ -14,25 +14,27 @@ import {
   X
 } from 'lucide-react';
 
+const DEFAULT_FILTERS = {
+  types: ['cafe', 'library'],
+  openNow: false,
+  priceRange: [1, 3] as [number, number],
+  amenityMinimums: {
+    wifi: 3.0,
+    outlets: 2.5,
+    noise: 4.0,
+    seating: 2.5,
+  },
+  withinMinutes: 20,
+  transportMode: 'walking' as 'walking' | 'driving'
+};
+
 const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('top-rated');
 
-  const [filters, setFilters] = useState({
-    types: ['cafe', 'library'],
-    openNow: false,
-    priceRange: [1, 3] as [number, number],
-    amenityMinimums: {
-      wifi: 3.0,
-      outlets: 2.5,
-      noise: 4.0,
-      seating: 2.5,
-    },
-    withinMinutes: 20,
-    transportMode: 'walking' as 'walking' | 'driving'
-  });
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
   const places = getMockPlaces({ ...filters, sortBy });
   const openPlaces = places.filter(p => p.open_now);
@@ -41,6 +43,24 @@ const Index = () => {
   );
 
   const expandedPlace = selectedPlace ? places.find(p => p.id === selectedPlace) : null;
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.types.length !== DEFAULT_FILTERS.types.length ||
+        !filters.types.every(t => DEFAULT_FILTERS.types.includes(t))) count++;
+    if (filters.openNow !== DEFAULT_FILTERS.openNow) count++;
+    if (filters.priceRange[0] !== DEFAULT_FILTERS.priceRange[0] ||
+        filters.priceRange[1] !== DEFAULT_FILTERS.priceRange[1]) count++;
+    if (filters.withinMinutes !== DEFAULT_FILTERS.withinMinutes) count++;
+    if (filters.transportMode !== DEFAULT_FILTERS.transportMode) count++;
+    if (filters.amenityMinimums.wifi !== DEFAULT_FILTERS.amenityMinimums.wifi) count++;
+    if (filters.amenityMinimums.outlets !== DEFAULT_FILTERS.amenityMinimums.outlets) count++;
+    if (filters.amenityMinimums.noise !== DEFAULT_FILTERS.amenityMinimums.noise) count++;
+    if (filters.amenityMinimums.seating !== DEFAULT_FILTERS.amenityMinimums.seating) count++;
+    return count;
+  };
+
+  const activeFilterCount = getActiveFilterCount();
 
   const getNoiseLabel = (noise: number) => {
     if (noise <= 1.5) return 'Very Quiet';
@@ -122,10 +142,15 @@ const Index = () => {
             <Button
               variant="outline"
               onClick={() => setShowFilters(true)}
-              className="w-full justify-start text-base h-11"
+              className="w-full justify-between text-base h-11"
             >
-              <Filter className="h-5 w-5 mr-2" />
-              Filters & Preferences
+              <span className="flex items-center">
+                <Filter className="h-5 w-5 mr-2" />
+                Filters & Preferences
+              </span>
+              {activeFilterCount > 0 && (
+                <Badge className="ml-2 h-6 min-w-6 px-1.5 justify-center">{activeFilterCount}</Badge>
+              )}
             </Button>
           </div>
 
