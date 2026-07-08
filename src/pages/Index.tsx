@@ -23,7 +23,7 @@ const Index = () => {
   const [filters, setFilters] = useState({
     types: ['cafe', 'library'],
     openNow: false,
-    priceRange: [1, 4] as [number, number],
+    priceRange: [1, 3] as [number, number],
     amenityMinimums: {
       wifi: 3.0,
       outlets: 2.5,

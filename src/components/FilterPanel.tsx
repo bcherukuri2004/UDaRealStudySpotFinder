@@ -199,9 +199,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <Slider
                   value={filters.priceRange}
                   onValueChange={(value) =>
-                    onFiltersChange({ ...filters, priceRange: [Math.max(1, value[0]), Math.min(5, value[1])] as [number, number] })
+                    onFiltersChange({ ...filters, priceRange: [Math.max(1, value[0]), Math.min(3, value[1])] as [number, number] })
                   }
-                  max={5}
+                  max={3}
                   min={1}
                   step={1}
                   className="mb-3"
@@ -209,9 +209,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <div className="flex justify-between items-center text-base text-muted-foreground">
                   <span>$</span>
                   <span className="text-foreground font-semibold text-lg">
-                    {"$".repeat(Math.max(1, Math.min(5, filters.priceRange[0])))} - {"$".repeat(Math.max(1, Math.min(5, filters.priceRange[1])))}
+                    {"$".repeat(Math.max(1, Math.min(3, filters.priceRange[0])))} - {"$".repeat(Math.max(1, Math.min(3, filters.priceRange[1])))}
                   </span>
-                  <span>$$$$$</span>
+                  <span>$$$</span>
                 </div>
               </div>
             </div>
@@ -306,7 +306,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   <Badge variant="secondary" className="text-base px-3 py-1">Open Now</Badge>
                 )}
                 <Badge variant="secondary" className="text-base px-3 py-1">
-                  {"$".repeat(Math.max(1, Math.min(5, filters.priceRange[0])))} - {"$".repeat(Math.max(1, Math.min(5, filters.priceRange[1])))}
+                  {"$".repeat(Math.max(1, Math.min(3, filters.priceRange[0])))} - {"$".repeat(Math.max(1, Math.min(3, filters.priceRange[1])))}
                 </Badge>
               </div>
             </div>

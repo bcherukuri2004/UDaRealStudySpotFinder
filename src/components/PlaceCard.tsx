@@ -75,7 +75,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
     if (!level) return null;
     return (
       <div className="flex items-center">
-        {Array.from({ length: 4 }, (_, i) => (
+        {Array.from({ length: 3 }, (_, i) => (
           <DollarSign 
             key={i} 
             className={`h-3 w-3 ${
