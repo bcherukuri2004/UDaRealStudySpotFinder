@@ -36,6 +36,7 @@ interface FilterPanelProps {
     transportMode: 'walking' | 'driving';
   };
   onFiltersChange: (filters: any) => void;
+  onReset: () => void;
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -43,6 +44,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onClose,
   filters,
   onFiltersChange,
+  onReset,
 }) => {
   const placeTypes = [
     { id: 'cafe', label: 'Cafes', icon: Coffee },
@@ -117,9 +119,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <CardHeader className="border-b border-border px-8 py-6">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl font-bold">Filters</CardTitle>
-              <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
-                <X className="h-6 w-6" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={onReset} className="text-base">
+                  Reset Filters
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 

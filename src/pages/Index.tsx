@@ -325,6 +325,7 @@ const Index = () => {
         onClose={() => setShowFilters(false)}
         filters={filters}
         onFiltersChange={setFilters}
+        onReset={() => setFilters(DEFAULT_FILTERS)}
       />
     </div>
   );

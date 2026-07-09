@@ -199,6 +199,50 @@ export const mockPlaces: Place[] = [
       walking_min: 13,
       driving_min: 5,
     },
+  },
+  {
+    id: "9",
+    name: "The Counter",
+    coords: { lat: 37.4453, lng: -122.1607 },
+    rating: 4.0,
+    price_level: 2,
+    types: ["restaurant"],
+    address: "369 California Ave, Palo Alto, CA",
+    open_now: true,
+    amenities: {
+      wifi: 3.5,
+      outlets: 2.8,
+      noise: 3.6,
+      seating: 4.2
+    },
+    badges: ["good-for-groups"],
+    distance_meters: 1650,
+    travel_time: {
+      walking_min: 21,
+      driving_min: 8,
+    },
+  },
+  {
+    id: "10",
+    name: "MacArthur Park",
+    coords: { lat: 37.4432, lng: -122.1587 },
+    rating: 4.3,
+    price_level: 3,
+    types: ["restaurant"],
+    address: "27 University Ave, Palo Alto, CA",
+    open_now: false,
+    amenities: {
+      wifi: 3.2,
+      outlets: 2.5,
+      noise: 3.9,
+      seating: 4.4
+    },
+    badges: ["patio-seating"],
+    distance_meters: 1380,
+    travel_time: {
+      walking_min: 18,
+      driving_min: 7,
+    },
   }
 ];
 
