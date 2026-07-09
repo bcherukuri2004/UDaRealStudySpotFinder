@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { getMockPlaces, SortOption } from '@/data/mockPlaces';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
-  X
+  X, Search
 } from 'lucide-react';
 
 const DEFAULT_FILTERS = {
@@ -33,10 +34,17 @@ const Index = () => {
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('top-rated');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  const places = getMockPlaces({ ...filters, sortBy });
+  const allPlaces = getMockPlaces({ ...filters, sortBy });
+  const places = searchQuery.trim()
+    ? allPlaces.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.address.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allPlaces;
   const openPlaces = places.filter(p => p.open_now);
   const topStudySpots = places.filter(p =>
     p.amenities.wifi >= 4.5 && p.amenities.noise <= 2.0
@@ -156,6 +164,19 @@ const Index = () => {
 
           {/* Place List */}
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+            {/* Search */}
+            <div className="px-4 pt-3 flex-shrink-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search by name or address..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11 text-base"
+                />
+              </div>
+            </div>
+
             {/* List header + sort */}
             <div className="flex items-center justify-between py-3 px-4 flex-shrink-0 border-b border-border">
               <CardTitle className="text-lg">
@@ -166,7 +187,7 @@ const Index = () => {
                     : 'Libraries'}
               </CardTitle>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-36 h-9 text-sm">
+                <SelectTrigger className="w-44 h-11 text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,10 +294,18 @@ const Index = () => {
                 ) : (
                   <div className="text-center py-8">
                     <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-base text-muted-foreground">No places match your filters</p>
-                    <Button variant="ghost" size="sm" onClick={() => setShowFilters(true)} className="mt-2">
-                      Adjust Filters
-                    </Button>
+                    <p className="text-base text-muted-foreground">
+                      {searchQuery.trim() ? `No results for "${searchQuery}"` : 'No places match your filters'}
+                    </p>
+                    {searchQuery.trim() ? (
+                      <Button variant="ghost" size="sm" onClick={() => setSearchQuery('')} className="mt-2">
+                        Clear Search
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => setShowFilters(true)} className="mt-2">
+                        Adjust Filters
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
