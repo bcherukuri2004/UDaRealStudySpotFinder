@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { isOpenNow, getHoursLabel, Hours } from '@/data/mockPlaces';
 import {
   Wifi,
   Zap,
@@ -24,7 +25,7 @@ interface PlaceCardProps {
       walking_min: number;
       driving_min: number;
     };
-    open_now?: boolean;
+    hours?: Hours;
     amenities?: {
       wifi?: number;
       outlets?: number;
@@ -70,6 +71,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
     if (noise <= 4) return 'Moderate';
     return 'Loud';
   };
+
+  const formatBadgeLabel = (badge: string) =>
+    badge
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
   const renderPriceLevel = (level?: number) => {
     if (!level) return null;
@@ -124,9 +131,13 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 </div>
               </div>
 
-              {place.open_now !== undefined && (
-                <Badge variant={place.open_now ? "default" : "secondary"} className="ml-2 text-xs shrink-0">
-                  {place.open_now ? "Open" : "Closed"}
+              {place.hours && (
+                <Badge
+                  variant={isOpenNow(place.hours) ? "default" : "secondary"}
+                  className="ml-2 text-xs shrink-0"
+                  title={getHoursLabel(place.hours)}
+                >
+                  {isOpenNow(place.hours) ? "Open" : "Closed"}
                 </Badge>
               )}
             </div>
@@ -162,7 +173,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                     variant="secondary"
                     className="text-base px-3 py-1"
                   >
-                    {badge}
+                    {formatBadgeLabel(badge)}
                   </Badge>
                 ))}
               </div>

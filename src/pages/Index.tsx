@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { getMockPlaces, SortOption } from '@/data/mockPlaces';
+import { getMockPlaces, isOpenNow, getHoursLabel, SortOption } from '@/data/mockPlaces';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
@@ -45,7 +45,7 @@ const Index = () => {
         p.address.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : allPlaces;
-  const openPlaces = places.filter(p => p.open_now);
+  const openPlaces = places.filter(p => isOpenNow(p.hours));
   const topStudySpots = places.filter(p =>
     p.amenities.wifi >= 4.5 && p.amenities.noise <= 2.0
   );
@@ -214,9 +214,12 @@ const Index = () => {
                       {/* Expanded detail panel */}
                       {selectedPlace === place.id && expandedPlace && (
                         <div className="mt-1 mb-2 rounded-xl border border-border bg-background p-5 space-y-4">
-                          {/* Address */}
+                          {/* Address + hours */}
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-base font-medium text-foreground">{expandedPlace.address}</p>
+                            <div>
+                              <p className="text-base font-medium text-foreground">{expandedPlace.address}</p>
+                              <p className="text-sm text-muted-foreground mt-0.5">{getHoursLabel(expandedPlace.hours)}</p>
+                            </div>
                             <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setSelectedPlace(null)}>
                               <X className="h-4 w-4" />
                             </Button>

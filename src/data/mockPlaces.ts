@@ -1,3 +1,8 @@
+export interface Hours {
+  open: number;  // 24-hour format, e.g. 7 = 7:00 AM
+  close: number; // 24-hour format, e.g. 22 = 10:00 PM. Use open: 0, close: 24 for 24-hour spots.
+}
+
 export interface Place {
   id: string;
   name: string;
@@ -6,7 +11,7 @@ export interface Place {
   price_level: number;
   types: string[];
   address: string;
-  open_now: boolean;
+  hours: Hours;
   amenities: {
     wifi: number;
     outlets: number;
@@ -32,7 +37,7 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["cafe"],
     address: "538 Ramona St, Palo Alto, CA",
-    open_now: true,
+    hours: { open: 7, close: 21 },
     amenities: {
       wifi: 4.8,
       outlets: 4.2,
@@ -54,7 +59,7 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "557 Escondido Mall, Stanford, CA",
-    open_now: true,
+    hours: { open: 8, close: 23 },
     amenities: {
       wifi: 4.9,
       outlets: 4.7,
@@ -76,7 +81,7 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["cafe"],
     address: "101 Forest Ave, Palo Alto, CA",
-    open_now: false,
+    hours: { open: 6, close: 19 },
     amenities: {
       wifi: 4.1,
       outlets: 3.8,
@@ -98,7 +103,7 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "450 Jane Stanford Way, Stanford, CA",
-    open_now: true,
+    hours: { open: 0, close: 24 },
     amenities: {
       wifi: 4.8,
       outlets: 4.9,
@@ -120,7 +125,7 @@ export const mockPlaces: Place[] = [
     price_level: 3,
     types: ["cafe"],
     address: "310 Pasteur Dr, Stanford, CA",
-    open_now: true,
+    hours: { open: 6, close: 20 },
     amenities: {
       wifi: 4.0,
       outlets: 3.2,
@@ -142,7 +147,7 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "459 Lagunita Dr, Stanford, CA",
-    open_now: true,
+    hours: { open: 7, close: 24 },
     amenities: {
       wifi: 4.6,
       outlets: 4.3,
@@ -164,7 +169,7 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["cafe"],
     address: "419 University Ave, Palo Alto, CA",
-    open_now: true,
+    hours: { open: 7, close: 22 },
     amenities: {
       wifi: 3.7,
       outlets: 3.9,
@@ -186,7 +191,7 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "Crown Quadrangle, Stanford, CA",
-    open_now: true,
+    hours: { open: 8, close: 22 },
     amenities: {
       wifi: 4.9,
       outlets: 4.8,
@@ -208,7 +213,7 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["restaurant"],
     address: "369 California Ave, Palo Alto, CA",
-    open_now: true,
+    hours: { open: 11, close: 22 },
     amenities: {
       wifi: 3.5,
       outlets: 2.8,
@@ -230,7 +235,7 @@ export const mockPlaces: Place[] = [
     price_level: 3,
     types: ["restaurant"],
     address: "27 University Ave, Palo Alto, CA",
-    open_now: false,
+    hours: { open: 11, close: 21 },
     amenities: {
       wifi: 3.2,
       outlets: 2.5,
@@ -247,6 +252,26 @@ export const mockPlaces: Place[] = [
 ];
 
 export type SortOption = 'nearest' | 'top-rated' | 'quietest' | 'best-wifi';
+
+export const isOpenNow = (hours: Hours): boolean => {
+  const now = new Date();
+  const currentHour = now.getHours() + now.getMinutes() / 60;
+
+  if (hours.open === 0 && hours.close === 24) return true;
+  return currentHour >= hours.open && currentHour < hours.close;
+};
+
+export const getHoursLabel = (hours: Hours): string => {
+  if (hours.open === 0 && hours.close === 24) return 'Open 24 hours';
+
+  const formatHour = (h: number) => {
+    const period = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 === 0 ? 12 : h % 12;
+    return `${displayHour}:00 ${period}`;
+  };
+
+  return `${formatHour(hours.open)} - ${formatHour(hours.close)}`;
+};
 
 export const getMockPlaces = (filters?: {
   types?: string[];
@@ -272,7 +297,7 @@ export const getMockPlaces = (filters?: {
     }
 
     if (filters.openNow) {
-      filtered = filtered.filter(place => place.open_now);
+      filtered = filtered.filter(place => isOpenNow(place.hours));
     }
 
     if (filters.priceRange) {
