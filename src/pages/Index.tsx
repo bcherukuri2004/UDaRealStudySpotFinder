@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Map from '@/components/Map';
 import PlaceCard from '@/components/PlaceCard';
 import FilterPanel from '@/components/FilterPanel';
@@ -12,7 +12,7 @@ import { getMockPlaces, isOpenNow, getHoursLabel, SortOption } from '@/data/mock
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
-  X, Search
+  X, Search, Moon, Sun
 } from 'lucide-react';
 
 const DEFAULT_FILTERS = {
@@ -35,6 +35,14 @@ const Index = () => {
   const [mapboxToken, setMapboxToken] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('top-rated');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
@@ -110,6 +118,14 @@ const Index = () => {
                 <Clock className="h-5 w-5" />
                 {openPlaces.length} Open Now
               </Badge>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="h-11 w-11"
+              >
+                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
             </div>
           </div>
         </div>
