@@ -12,7 +12,7 @@ import { getMockPlaces, isOpenNow, getHoursLabel, SortOption } from '@/data/mock
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
-  X, Search, Moon, Sun
+  X, Search, Moon, Sun, Utensils
 } from 'lucide-react';
 
 const DEFAULT_FILTERS = {
@@ -106,14 +106,24 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
-                <Coffee className="h-5 w-5" />
-                {places.filter(p => p.types.includes('cafe')).length} Cafes
-              </Badge>
-              <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
-                <BookOpen className="h-5 w-5" />
-                {places.filter(p => p.types.includes('library')).length} Libraries
-              </Badge>
+              {filters.types.includes('cafe') && (
+                <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
+                  <Coffee className="h-5 w-5" />
+                  {places.filter(p => p.types.includes('cafe')).length} Cafes
+                </Badge>
+              )}
+              {filters.types.includes('library') && (
+                <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  {places.filter(p => p.types.includes('library')).length} Libraries
+                </Badge>
+              )}
+              {filters.types.includes('restaurant') && (
+                <Badge variant="secondary" className="hidden sm:flex text-base px-4 py-2 gap-2">
+                  <Utensils className="h-5 w-5" />
+                  {places.filter(p => p.types.includes('restaurant')).length} Restaurants
+                </Badge>
+              )}
               <Badge variant="secondary" className="text-base px-4 py-2 gap-2">
                 <Clock className="h-5 w-5" />
                 {openPlaces.length} Open Now
