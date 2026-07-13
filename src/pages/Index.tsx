@@ -44,6 +44,17 @@ const Index = () => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showFilters) setShowFilters(false);
+        else if (selectedPlace) setSelectedPlace(null);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [showFilters, selectedPlace]);
+
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
   const allPlaces = getMockPlaces({ ...filters, sortBy });
@@ -321,19 +332,35 @@ const Index = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8">
-                    <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-base text-muted-foreground">
-                      {searchQuery.trim() ? `No results for "${searchQuery}"` : 'No places match your filters'}
+                  <div className="flex flex-col items-center text-center px-6 py-16">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-5">
+                      {searchQuery.trim() ? (
+                        <Search className="h-10 w-10 text-muted-foreground" />
+                      ) : (
+                        <MapPin className="h-10 w-10 text-muted-foreground" />
+                      )}
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
+                      {searchQuery.trim() ? 'No matches found' : 'No spots match your filters'}
+                    </h3>
+                    <p className="text-base text-muted-foreground max-w-xs mb-5">
+                      {searchQuery.trim()
+                        ? `We couldn't find anything for "${searchQuery}". Try a different name or address.`
+                        : 'Try widening your filters — loosen the amenity minimums, expand the travel time, or add more place types.'}
                     </p>
                     {searchQuery.trim() ? (
-                      <Button variant="ghost" size="sm" onClick={() => setSearchQuery('')} className="mt-2">
+                      <Button variant="outline" onClick={() => setSearchQuery('')}>
                         Clear Search
                       </Button>
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={() => setShowFilters(true)} className="mt-2">
-                        Adjust Filters
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setFilters(DEFAULT_FILTERS)}>
+                          Reset Filters
+                        </Button>
+                        <Button onClick={() => setShowFilters(true)}>
+                          Adjust Filters
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}

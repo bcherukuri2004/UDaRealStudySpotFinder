@@ -96,12 +96,22 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
   return (
     <Card
-      className={`hover:shadow-medium transition-all duration-200 cursor-pointer ${
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      aria-label={`${place.name}${isSelected ? ', selected' : ''}`}
+      className={`hover:shadow-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
         isSelected
           ? 'border-primary ring-2 ring-primary/30'
           : 'border-border/50 hover:border-border'
       }`}
       onClick={() => onSelect?.(place.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect?.(place.id);
+        }
+      }}
     >
       <CardContent className="p-6">
         <div className="flex gap-3">
