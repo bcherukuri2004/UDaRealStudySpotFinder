@@ -25,6 +25,7 @@ export interface Place {
     driving_min: number;
   };
   photo_url?: string;
+  isDiscovered?: boolean; // true if pulled live from Foursquare (no reviews yet)
 }
 
 // Mock data for Stanford/Palo Alto area study spots
