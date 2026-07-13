@@ -369,7 +369,7 @@ const Index = () => {
         </div>
 
         {/* Map */}
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <Map
             places={places}
             selectedPlace={selectedPlace}
