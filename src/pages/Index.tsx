@@ -32,7 +32,6 @@ const DEFAULT_FILTERS = {
 const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('top-rated');
   const [searchQuery, setSearchQuery] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -371,7 +370,11 @@ const Index = () => {
 
         {/* Map */}
         <div className="flex-1">
-          <Map mapboxToken={mapboxToken} />
+          <Map
+            places={places}
+            selectedPlace={selectedPlace}
+            onSelectPlace={(id) => setSelectedPlace(selectedPlace === id ? null : id)}
+          />
         </div>
       </div>
 

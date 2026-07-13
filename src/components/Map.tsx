@@ -1,110 +1,108 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { MapPin, Search, Settings2 } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { Place } from '@/data/mockPlaces';
 
 interface MapProps {
-  onLocationSelect?: (lat: number, lng: number) => void;
-  mapboxToken?: string;
+  places: Place[];
+  selectedPlace: string | null;
+  onSelectPlace: (id: string) => void;
 }
 
-const Map: React.FC<MapProps> = ({ onLocationSelect, mapboxToken }) => {
+// Color each pin by place type
+const typeColor = (types: string[]) => {
+  if (types.includes('library')) return '#3b82f6'; // blue
+  if (types.includes('restaurant')) return '#a855f7'; // purple
+  return '#f97316'; // orange (cafe / default)
+};
+
+// Free OpenStreetMap raster tiles — no API key required
+const OSM_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: [
+        'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      ],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors',
+    },
+  },
+  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+};
+
+const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [tokenInput, setTokenInput] = useState('');
-  const [isTokenSet, setIsTokenSet] = useState(false);
+  const map = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<Record<string, maplibregl.Marker>>({});
 
+  // Initialize the map once
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || map.current) return;
 
-    // Initialize map
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [-122.0312, 37.3318], // Default to Stanford area - perfect for study spots
-      zoom: 14,
-      pitch: 0,
+      style: OSM_STYLE,
+      center: [-122.158, 37.432], // Stanford / Palo Alto
+      zoom: 13.5,
     });
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
+    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-    // Handle map clicks for location selection
-    map.current.on('click', (e) => {
-      const { lng, lat } = e.lngLat;
-      onLocationSelect?.(lat, lng);
-    });
-
-    // Cleanup
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, [mapboxToken, onLocationSelect]);
+  }, []);
 
-  const handleTokenSubmit = () => {
-    if (tokenInput.trim()) {
-      setIsTokenSet(true);
+  // Rebuild markers whenever the visible places change
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove old markers
+    Object.values(markers.current).forEach(m => m.remove());
+    markers.current = {};
+
+    places.forEach(place => {
+      const el = document.createElement('div');
+      el.className = 'ss-marker';
+      el.style.setProperty('--marker-color', typeColor(place.types));
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([place.coords.lng, place.coords.lat])
+        .addTo(map.current!);
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onSelectPlace(place.id);
+      });
+
+      markers.current[place.id] = marker;
+    });
+  }, [places, onSelectPlace]);
+
+  // Highlight + fly to the selected place
+  useEffect(() => {
+    Object.entries(markers.current).forEach(([id, marker]) => {
+      marker.getElement().classList.toggle('ss-marker-selected', id === selectedPlace);
+    });
+
+    if (selectedPlace && map.current) {
+      const place = places.find(p => p.id === selectedPlace);
+      if (place) {
+        map.current.flyTo({
+          center: [place.coords.lng, place.coords.lat],
+          zoom: 15,
+          duration: 800,
+        });
+      }
     }
-  };
+  }, [selectedPlace, places]);
 
-  if (!mapboxToken && !isTokenSet) {
-    return (
-      <div className="relative w-full h-full flex items-center justify-center bg-gradient-surface border border-border rounded-lg">
-        <div className="text-center p-8 max-w-md">
-          <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Setup Mapbox</h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            Enter your Mapbox public token to display the interactive map. 
-            Get your token at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
-          </p>
-          <div className="flex flex-col gap-2">
-            <Input
-              placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSI..."
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              className="text-sm"
-            />
-            <Button onClick={handleTokenSubmit} className="w-full">
-              Initialize Map
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const actualToken = mapboxToken || tokenInput;
-
-  return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden" />
-      
-      {/* Search Overlay */}
-      <div className="absolute top-4 left-4 right-4 z-10">
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search for cafes, libraries, study spots..."
-              className="pl-10 pr-4 bg-card/95 backdrop-blur border-border shadow-medium"
-            />
-          </div>
-          <Button variant="outline" size="icon" className="bg-card/95 backdrop-blur border-border shadow-medium">
-            <Settings2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+  return <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden" />;
 };
 
 export default Map;
