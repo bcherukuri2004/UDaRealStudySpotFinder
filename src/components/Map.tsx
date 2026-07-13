@@ -52,6 +52,16 @@ const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace }) => {
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
+    // "Find me" control — requests the user's location, drops a live dot, and centers on them
+    map.current.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserLocation: true,
+      }),
+      'top-right'
+    );
+
     return () => {
       map.current?.remove();
       map.current = null;
