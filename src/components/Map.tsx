@@ -7,6 +7,7 @@ interface MapProps {
   places: Place[];
   selectedPlace: string | null;
   onSelectPlace: (id: string) => void;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 // Color each pin by place type
@@ -34,7 +35,7 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
-const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace }) => {
+const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLocation }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<Record<string, maplibregl.Marker>>({});
@@ -93,6 +94,17 @@ const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace }) => {
       markers.current[place.id] = marker;
     });
   }, [places, onSelectPlace]);
+
+  // Fly to the user's location once we have it
+  useEffect(() => {
+    if (userLocation && map.current) {
+      map.current.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 14,
+        duration: 1000,
+      });
+    }
+  }, [userLocation]);
 
   // Highlight + fly to the selected place
   useEffect(() => {

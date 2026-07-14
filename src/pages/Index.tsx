@@ -8,11 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { getMockPlaces, isOpenNow, getHoursLabel, SortOption } from '@/data/mockPlaces';
+import { getMockPlaces, isOpenNow, getHoursLabel, SortOption, Place } from '@/data/mockPlaces';
+import { fetchNearbyPlaces } from '@/data/foursquare';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
-  X, Search, Moon, Sun, Utensils
+  X, Search, Moon, Sun, Utensils, LocateFixed, Loader2, Sparkles
 } from 'lucide-react';
 
 const DEFAULT_FILTERS = {
@@ -55,14 +56,57 @@ const Index = () => {
   }, [showFilters, selectedPlace]);
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [discoveredPlaces, setDiscoveredPlaces] = useState<Place[]>([]);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [discoverError, setDiscoverError] = useState<string | null>(null);
 
-  const allPlaces = getMockPlaces({ ...filters, sortBy });
+  const handleDiscover = () => {
+    if (!navigator.geolocation) {
+      setDiscoverError('Location is not supported by your browser.');
+      return;
+    }
+    setIsDiscovering(true);
+    setDiscoverError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        try {
+          const results = await fetchNearbyPlaces(latitude, longitude);
+          setDiscoveredPlaces(results);
+        } catch {
+          setDiscoverError('Could not load nearby places. Try again.');
+        } finally {
+          setIsDiscovering(false);
+        }
+      },
+      () => {
+        setDiscoverError('Location permission denied.');
+        setIsDiscovering(false);
+      }
+    );
+  };
+
+  // Curated (mock) places run through the full filter pipeline
+  const curatedPlaces = getMockPlaces({ ...filters, sortBy });
+
+  // Discovered (real) places have no amenity/price data, so we only apply
+  // the filters that make sense for them: type + travel time.
+  const travelKey = filters.transportMode === 'walking' ? 'walking_min' : 'driving_min';
+  const discoveredFiltered = discoveredPlaces.filter(p =>
+    p.types.some(t => filters.types.includes(t)) &&
+    p.travel_time[travelKey] <= filters.withinMinutes
+  );
+
+  // Blend: curated (rated) first, then discovered (unrated)
+  const combined = [...curatedPlaces, ...discoveredFiltered];
   const places = searchQuery.trim()
-    ? allPlaces.filter(p =>
+    ? combined.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.address.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : allPlaces;
+    : combined;
   const openPlaces = places.filter(p => isOpenNow(p.hours));
   const topStudySpots = places.filter(p =>
     p.amenities.wifi >= 4.5 && p.amenities.noise <= 2.0
@@ -186,7 +230,7 @@ const Index = () => {
             <Button
               variant="outline"
               onClick={() => setShowFilters(true)}
-              className="w-full justify-between text-base h-11"
+              className="w-full justify-between text-base h-11 mb-2"
             >
               <span className="flex items-center">
                 <Filter className="h-5 w-5 mr-2" />
@@ -196,6 +240,27 @@ const Index = () => {
                 <Badge className="ml-2 h-6 min-w-6 px-1.5 justify-center">{activeFilterCount}</Badge>
               )}
             </Button>
+
+            <Button
+              onClick={handleDiscover}
+              disabled={isDiscovering}
+              className="w-full justify-start text-base h-11"
+            >
+              {isDiscovering ? (
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <LocateFixed className="h-5 w-5 mr-2" />
+              )}
+              {isDiscovering ? 'Finding spots near you…' : 'Discover real places near me'}
+            </Button>
+            {discoverError && (
+              <p className="text-sm text-destructive mt-2">{discoverError}</p>
+            )}
+            {discoveredPlaces.length > 0 && !discoverError && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Found {discoveredPlaces.length} real places nearby ✨
+              </p>
+            )}
           </div>
 
           {/* Place List */}
@@ -254,13 +319,29 @@ const Index = () => {
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <p className="text-base font-medium text-foreground">{expandedPlace.address}</p>
-                              <p className="text-sm text-muted-foreground mt-0.5">{getHoursLabel(expandedPlace.hours)}</p>
+                              {!expandedPlace.isDiscovered && (
+                                <p className="text-sm text-muted-foreground mt-0.5">{getHoursLabel(expandedPlace.hours)}</p>
+                              )}
                             </div>
                             <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setSelectedPlace(null)}>
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
 
+                          {expandedPlace.isDiscovered ? (
+                            /* Discovered place — no amenity data yet */
+                            <div className="rounded-lg border border-dashed border-border p-4 text-center">
+                              <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
+                              <p className="text-base font-medium">Not yet rated</p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                No one's reviewed the WiFi, outlets, or noise here yet. Be the first to help others out!
+                              </p>
+                              <Button variant="outline" className="mt-3" disabled>
+                                Leave a review (coming soon)
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
                           {/* All amenity scores */}
                           <div className="grid grid-cols-2 gap-2">
                             <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
@@ -313,6 +394,8 @@ const Index = () => {
                               </span>
                             </div>
                           </div>
+                            </>
+                          )}
 
                           {/* Directions button */}
                           <a
@@ -374,6 +457,7 @@ const Index = () => {
             places={places}
             selectedPlace={selectedPlace}
             onSelectPlace={(id) => setSelectedPlace(selectedPlace === id ? null : id)}
+            userLocation={userLocation}
           />
         </div>
       </div>

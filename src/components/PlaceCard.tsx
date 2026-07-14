@@ -10,7 +10,8 @@ import {
   Star,
   Clock,
   DollarSign,
-  MapPin
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 
 interface PlaceCardProps {
@@ -34,6 +35,7 @@ interface PlaceCardProps {
     };
     badges?: string[];
     photo_url?: string;
+    isDiscovered?: boolean;
   };
   onSelect?: (placeId: string) => void;
   transportMode?: 'walking' | 'driving';
@@ -141,7 +143,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 </div>
               </div>
 
-              {place.hours && (
+              {place.hours && !place.isDiscovered && (
                 <Badge
                   variant={isOpenNow(place.hours) ? "default" : "secondary"}
                   className="ml-2 text-xs shrink-0"
@@ -150,10 +152,20 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                   {isOpenNow(place.hours) ? "Open" : "Closed"}
                 </Badge>
               )}
+              {place.isDiscovered && (
+                <Badge variant="outline" className="ml-2 text-xs shrink-0">
+                  New
+                </Badge>
+              )}
             </div>
 
-            {/* Amenity Scores */}
-            {place.amenities && (
+            {/* Amenity Scores — or "not yet rated" prompt for discovered places */}
+            {place.isDiscovered ? (
+              <div className="flex items-center gap-2 mb-2.5 text-base text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Not yet rated — be the first to review</span>
+              </div>
+            ) : place.amenities && (
               <div className="flex gap-2 mb-2.5 flex-wrap">
                 {Object.entries(place.amenities).map(([type, score]) => {
                   const IconComponent = amenityIcons[type as keyof typeof amenityIcons];
