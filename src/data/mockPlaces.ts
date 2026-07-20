@@ -26,6 +26,7 @@ export interface Place {
   };
   photo_url?: string;
   isDiscovered?: boolean; // true if pulled live from Foursquare (no reviews yet)
+  reviewCount?: number;   // how many crowd reviews this place has
 }
 
 // Mock data for Stanford/Palo Alto area study spots

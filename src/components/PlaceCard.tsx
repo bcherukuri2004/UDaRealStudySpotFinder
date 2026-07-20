@@ -11,7 +11,8 @@ import {
   Clock,
   DollarSign,
   MapPin,
-  Sparkles
+  Sparkles,
+  Users
 } from 'lucide-react';
 
 interface PlaceCardProps {
@@ -36,6 +37,7 @@ interface PlaceCardProps {
     badges?: string[];
     photo_url?: string;
     isDiscovered?: boolean;
+    reviewCount?: number;
   };
   onSelect?: (placeId: string) => void;
   transportMode?: 'walking' | 'driving';
@@ -152,15 +154,21 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                   {isOpenNow(place.hours) ? "Open" : "Closed"}
                 </Badge>
               )}
-              {place.isDiscovered && (
+              {place.isDiscovered && !(place.reviewCount ?? 0) && (
                 <Badge variant="outline" className="ml-2 text-xs shrink-0">
                   New
                 </Badge>
               )}
+              {(place.reviewCount ?? 0) > 0 && (
+                <Badge variant="outline" className="ml-2 text-xs shrink-0 gap-1">
+                  <Users className="h-3 w-3" />
+                  {place.reviewCount}
+                </Badge>
+              )}
             </div>
 
-            {/* Amenity Scores — or "not yet rated" prompt for discovered places */}
-            {place.isDiscovered ? (
+            {/* Amenity Scores — or "not yet rated" prompt if no data exists yet */}
+            {place.isDiscovered && !(place.reviewCount ?? 0) ? (
               <div className="flex items-center gap-2 mb-2.5 text-base text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>Not yet rated — be the first to review</span>

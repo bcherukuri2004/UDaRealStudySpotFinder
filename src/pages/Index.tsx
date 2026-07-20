@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { getMockPlaces, isOpenNow, getHoursLabel, SortOption, Place } from '@/data/mockPlaces';
 import { fetchNearbyPlaces } from '@/data/foursquare';
+import ReviewForm from '@/components/ReviewForm';
+import { fetchRatings, fetchReviewsForPlace, externalIdFor, CrowdRating, Review } from '@/data/reviews';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
@@ -101,12 +104,57 @@ const Index = () => {
 
   // Blend: curated (rated) first, then discovered (unrated)
   const combined = [...curatedPlaces, ...discoveredFiltered];
-  const places = searchQuery.trim()
+  const rawPlaces = searchQuery.trim()
     ? combined.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.address.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : combined;
+  // ---- Crowd reviews ----
+  const [crowdRatings, setCrowdRatings] = useState<Record<string, CrowdRating>>({});
+  const [reviewTarget, setReviewTarget] = useState<Place | null>(null);
+  const [placeReviews, setPlaceReviews] = useState<Review[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Overlay real crowd ratings on top of whatever data a place shipped with.
+  // Human reviews always win over demo/placeholder numbers.
+  const places = rawPlaces.map(p => {
+    const cr = crowdRatings[externalIdFor(p)];
+    if (!cr) return p;
+    return {
+      ...p,
+      amenities: {
+        wifi: cr.avg_wifi,
+        outlets: cr.avg_outlets,
+        noise: cr.avg_noise,
+        seating: cr.avg_seating,
+      },
+      reviewCount: cr.review_count,
+    };
+  });
+
+  // Fetch ratings for whatever places are currently visible
+  const visibleIds = rawPlaces.map(externalIdFor).join(',');
+  useEffect(() => {
+    if (!isSupabaseConfigured || !visibleIds) return;
+    fetchRatings(visibleIds.split(','))
+      .then(setCrowdRatings)
+      .catch(() => {/* reviews are non-critical; fail quietly */});
+  }, [visibleIds, refreshKey]);
+
+  // Load individual reviews for whichever place is expanded
+  useEffect(() => {
+    if (!isSupabaseConfigured || !selectedPlace) {
+      setPlaceReviews([]);
+      return;
+    }
+    const target = places.find(p => p.id === selectedPlace);
+    if (!target) return;
+    fetchReviewsForPlace(externalIdFor(target))
+      .then(setPlaceReviews)
+      .catch(() => setPlaceReviews([]));
+  }, [selectedPlace, refreshKey]);
+
   const openPlaces = places.filter(p => isOpenNow(p.hours));
   const topStudySpots = places.filter(p =>
     p.amenities.wifi >= 4.5 && p.amenities.noise <= 2.0
@@ -328,7 +376,7 @@ const Index = () => {
                             </Button>
                           </div>
 
-                          {expandedPlace.isDiscovered ? (
+                          {expandedPlace.isDiscovered && !(expandedPlace.reviewCount ?? 0) ? (
                             /* Discovered place — no amenity data yet */
                             <div className="rounded-lg border border-dashed border-border p-4 text-center">
                               <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
@@ -336,8 +384,13 @@ const Index = () => {
                               <p className="text-sm text-muted-foreground mt-1">
                                 No one's reviewed the WiFi, outlets, or noise here yet. Be the first to help others out!
                               </p>
-                              <Button variant="outline" className="mt-3" disabled>
-                                Leave a review (coming soon)
+                              <Button
+                                variant="outline"
+                                className="mt-3"
+                                onClick={() => setReviewTarget(expandedPlace)}
+                                disabled={!isSupabaseConfigured}
+                              >
+                                Be the first to review
                               </Button>
                             </div>
                           ) : (
@@ -395,6 +448,41 @@ const Index = () => {
                             </div>
                           </div>
                             </>
+                          )}
+
+                          {/* Community reviews */}
+                          {placeReviews.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-sm font-semibold text-muted-foreground">
+                                {placeReviews.length} review{placeReviews.length === 1 ? '' : 's'}
+                              </p>
+                              {placeReviews.slice(0, 3).map(r => (
+                                <div key={r.id} className="rounded-lg bg-muted/40 p-3">
+                                  <p className="text-sm font-medium">
+                                    {r.author_name || 'Anonymous'}
+                                  </p>
+                                  {r.comment && (
+                                    <p className="text-sm text-muted-foreground mt-1">{r.comment}</p>
+                                  )}
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    WiFi {r.wifi} · Outlets {r.outlets} · Noise {r.noise} · Seating {r.seating}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Add a review (hidden when the empty-state button already offers it) */}
+                          {!(expandedPlace.isDiscovered && !(expandedPlace.reviewCount ?? 0)) && (
+                            <Button
+                              variant="outline"
+                              className="w-full gap-2"
+                              onClick={() => setReviewTarget(expandedPlace)}
+                              disabled={!isSupabaseConfigured}
+                            >
+                              <Sparkles className="h-4 w-4" />
+                              Rate this spot
+                            </Button>
                           )}
 
                           {/* Directions button */}
@@ -469,6 +557,13 @@ const Index = () => {
         filters={filters}
         onFiltersChange={setFilters}
         onReset={() => setFilters(DEFAULT_FILTERS)}
+      />
+
+      {/* Review form */}
+      <ReviewForm
+        place={reviewTarget}
+        onClose={() => setReviewTarget(null)}
+        onSubmitted={() => setRefreshKey(k => k + 1)}
       />
     </div>
   );
