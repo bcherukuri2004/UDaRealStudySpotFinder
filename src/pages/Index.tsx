@@ -64,31 +64,58 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [discoverError, setDiscoverError] = useState<string | null>(null);
 
-  const handleDiscover = () => {
-    if (!navigator.geolocation) {
-      setDiscoverError('Location is not supported by your browser.');
-      return;
-    }
+  // How far the travel-time filter reaches, in metres.
+  // Keeps the fetch radius consistent with what the filter will allow through.
+  const metersPerMinute = filters.transportMode === 'walking' ? 80 : 600;
+  const filterRadiusM = filters.withinMinutes * metersPerMinute;
+
+  /** Get the user's coordinates, reusing them if we already have them. */
+  const getCoords = (): Promise<{ lat: number; lng: number }> =>
+    new Promise((resolve, reject) => {
+      if (userLocation) return resolve(userLocation);
+      if (!navigator.geolocation) return reject(new Error('Location is not supported by your browser.'));
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(coords);
+          resolve(coords);
+        },
+        () => reject(new Error('Location permission denied.'))
+      );
+    });
+
+  /** Browse work-friendly spots around the user. */
+  const handleDiscover = async () => {
     setIsDiscovering(true);
     setDiscoverError(null);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        try {
-          const results = await fetchNearbyPlaces(latitude, longitude);
-          setDiscoveredPlaces(results);
-        } catch {
-          setDiscoverError('Could not load nearby places. Try again.');
-        } finally {
-          setIsDiscovering(false);
-        }
-      },
-      () => {
-        setDiscoverError('Location permission denied.');
-        setIsDiscovering(false);
+    try {
+      const { lat, lng } = await getCoords();
+      setDiscoveredPlaces(await fetchNearbyPlaces(lat, lng, undefined, filterRadiusM));
+    } catch (e) {
+      setDiscoverError(e instanceof Error ? e.message : 'Could not load nearby places.');
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
+  /** Search Foursquare by name (e.g. "Tamper Room") across a wide radius. */
+  const handleSearchNearby = async () => {
+    const term = searchQuery.trim();
+    if (!term) return;
+    setIsDiscovering(true);
+    setDiscoverError(null);
+    try {
+      const { lat, lng } = await getCoords();
+      const results = await fetchNearbyPlaces(lat, lng, term);
+      setDiscoveredPlaces(results);
+      if (results.length === 0) {
+        setDiscoverError(`No places found matching "${term}" nearby.`);
       }
-    );
+    } catch (e) {
+      setDiscoverError(e instanceof Error ? e.message : 'Search failed.');
+    } finally {
+      setIsDiscovering(false);
+    }
   };
 
   // Curated (mock) places run through the full filter pipeline
@@ -96,11 +123,16 @@ const Index = () => {
 
   // Discovered (real) places have no amenity/price data, so we only apply
   // the filters that make sense for them: type + travel time.
+  // When the user is searching by name, skip BOTH — if you explicitly asked for
+  // "Tamper Room", you want to see it even if it's a long drive or an odd category.
   const travelKey = filters.transportMode === 'walking' ? 'walking_min' : 'driving_min';
-  const discoveredFiltered = discoveredPlaces.filter(p =>
-    p.types.some(t => filters.types.includes(t)) &&
-    p.travel_time[travelKey] <= filters.withinMinutes
-  );
+  const isSearching = searchQuery.trim().length > 0;
+  const discoveredFiltered = isSearching
+    ? discoveredPlaces
+    : discoveredPlaces.filter(p =>
+        p.types.some(t => filters.types.includes(t)) &&
+        p.travel_time[travelKey] <= filters.withinMinutes
+      );
 
   // Blend: curated (rated) first, then discovered (unrated)
   const combined = [...curatedPlaces, ...discoveredFiltered];
@@ -315,15 +347,29 @@ const Index = () => {
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
             {/* Search */}
             <div className="px-4 pt-3 flex-shrink-0">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by name or address..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11 text-base"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search by name, e.g. Tamper Room"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchNearby(); }}
+                    className="pl-10 h-11 text-base"
+                  />
+                </div>
+                <Button
+                  onClick={handleSearchNearby}
+                  disabled={isDiscovering || !searchQuery.trim()}
+                  className="h-11 px-4"
+                  title="Search real places near you"
+                >
+                  {isDiscovering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </Button>
               </div>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Typing filters this list — press Enter to search real places nearby.
+              </p>
             </div>
 
             {/* List header + sort */}

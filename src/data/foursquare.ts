@@ -53,8 +53,8 @@ const toPlace = (r: FoursquareResult): Place => ({
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // reuse results for 5 minutes
 const MIN_INTERVAL_MS = 2000;       // at most one live call every 2s
-const MAX_LIMIT = 20;
-const MAX_RADIUS_M = 5000;
+const MAX_LIMIT = 50;
+const MAX_RADIUS_M = 40000;         // ~25 miles — covers a ~30 min drive
 
 const cache = new Map<string, { at: number; places: Place[] }>();
 let lastCallAt = 0;
@@ -65,22 +65,35 @@ const cacheKey = (lat: number, lng: number) =>
 
 /**
  * Fetch real work-friendly places near a coordinate via our proxy.
+ *
+ * @param searchTerm  optional name to search for (e.g. "Tamper Room").
+ *                    When omitted, we search the generic work-friendly categories.
+ * @param radiusM     optional search radius in metres (clamped to MAX_RADIUS_M).
+ *
  * Results are cached and calls are throttled to protect API quota.
  */
-export const fetchNearbyPlaces = async (lat: number, lng: number): Promise<Place[]> => {
+export const fetchNearbyPlaces = async (
+  lat: number,
+  lng: number,
+  searchTerm?: string,
+  radiusM: number = MAX_RADIUS_M
+): Promise<Place[]> => {
   // Validate inputs before spending a request
   if (!Number.isFinite(lat) || !Number.isFinite(lng) ||
       lat < -90 || lat > 90 || lng < -180 || lng > 180) {
     throw new Error('Invalid coordinates');
   }
 
-  const key = cacheKey(lat, lng);
+  const term = searchTerm?.trim() ?? '';
+  const radius = Math.min(Math.max(500, Math.round(radiusM)), MAX_RADIUS_M);
+
+  const key = `${cacheKey(lat, lng)}|${term.toLowerCase()}|${radius}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
     return hit.places; // served from cache — no API call, no quota used
   }
 
-  // Throttle: refuse to hammer the API on rapid repeat clicks
+  // Throttle: refuse to hammer the API on rapid repeat calls
   const sinceLast = Date.now() - lastCallAt;
   if (sinceLast < MIN_INTERVAL_MS) {
     if (hit) return hit.places;            // stale cache beats a burst
@@ -90,9 +103,10 @@ export const fetchNearbyPlaces = async (lat: number, lng: number): Promise<Place
 
   const params = new URLSearchParams({
     ll: `${lat},${lng}`,
-    query: 'cafe coffee library coworking',
+    // A specific name search should not be narrowed by our category keywords
+    query: term || 'cafe coffee library coworking',
     limit: String(MAX_LIMIT),
-    radius: String(MAX_RADIUS_M),
+    radius: String(radius),
   });
 
   const res = await fetch(`/fsq/places/search?${params.toString()}`);
