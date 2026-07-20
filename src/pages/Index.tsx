@@ -12,6 +12,7 @@ import { getMockPlaces, isOpenNow, getHoursLabel, SortOption, Place } from '@/da
 import { fetchNearbyPlaces } from '@/data/foursquare';
 import ReviewForm from '@/components/ReviewForm';
 import { fetchRatings, fetchReviewsForPlace, externalIdFor, CrowdRating, Review } from '@/data/reviews';
+import { getTravelTimes } from '@/data/routing';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
@@ -84,13 +85,46 @@ const Index = () => {
       );
     });
 
+  /**
+   * Replace straight-line estimates with real road times for the active
+   * transport mode. Falls back to the estimates if routing is unavailable.
+   * Only the current mode is fetched, to conserve the daily routing quota.
+   */
+  const enrichWithRealTimes = async (
+    origin: { lat: number; lng: number },
+    list: Place[]
+  ): Promise<Place[]> => {
+    const routed = await getTravelTimes(
+      origin,
+      list.map(p => p.coords),
+      filters.transportMode
+    );
+    if (!routed) return list;
+
+    return list.map((p, i) => {
+      const mins = routed.minutes[i];
+      const meters = routed.meters[i];
+      if (!Number.isFinite(mins)) return p;
+      return {
+        ...p,
+        distance_meters: Number.isFinite(meters) ? meters : p.distance_meters,
+        travel_time: {
+          ...p.travel_time,
+          [filters.transportMode === 'walking' ? 'walking_min' : 'driving_min']: mins,
+        },
+        hasRealTravelTime: true,
+      };
+    });
+  };
+
   /** Browse work-friendly spots around the user. */
   const handleDiscover = async () => {
     setIsDiscovering(true);
     setDiscoverError(null);
     try {
       const { lat, lng } = await getCoords();
-      setDiscoveredPlaces(await fetchNearbyPlaces(lat, lng, undefined, filterRadiusM));
+      const found = await fetchNearbyPlaces(lat, lng, undefined, filterRadiusM);
+      setDiscoveredPlaces(await enrichWithRealTimes({ lat, lng }, found));
     } catch (e) {
       setDiscoverError(e instanceof Error ? e.message : 'Could not load nearby places.');
     } finally {
@@ -106,7 +140,10 @@ const Index = () => {
     setDiscoverError(null);
     try {
       const { lat, lng } = await getCoords();
-      const results = await fetchNearbyPlaces(lat, lng, term);
+      const results = await enrichWithRealTimes(
+        { lat, lng },
+        await fetchNearbyPlaces(lat, lng, term)
+      );
       setDiscoveredPlaces(results);
       if (results.length === 0) {
         setDiscoverError(`No places found matching "${term}" nearby.`);

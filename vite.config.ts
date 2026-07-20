@@ -24,6 +24,17 @@ export default defineConfig(({ mode }) => {
             "X-Places-Api-Version": "2025-06-17",
           },
         },
+
+        // OpenRouteService — real road travel times.
+        // Scoped to the matrix endpoint only, same reasoning as above.
+        "/ors/v2/matrix": {
+          target: "https://api.openrouteservice.org",
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/ors/, ""),
+          headers: {
+            Authorization: env.ORS_API_KEY ?? "",
+          },
+        },
       },
     },
     plugins: [react()],
