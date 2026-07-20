@@ -35,6 +35,16 @@ export default defineConfig(({ mode }) => {
             Authorization: env.ORS_API_KEY ?? "",
           },
         },
+
+        // Isochrones — the "reachable area" polygon
+        "/ors/v2/isochrones": {
+          target: "https://api.openrouteservice.org",
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/ors/, ""),
+          headers: {
+            Authorization: env.ORS_API_KEY ?? "",
+          },
+        },
       },
     },
     plugins: [react()],

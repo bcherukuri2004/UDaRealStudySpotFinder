@@ -12,7 +12,7 @@ import { getMockPlaces, isOpenNow, getHoursLabel, SortOption, Place } from '@/da
 import { fetchNearbyPlaces } from '@/data/foursquare';
 import ReviewForm from '@/components/ReviewForm';
 import { fetchRatings, fetchReviewsForPlace, externalIdFor, CrowdRating, Review } from '@/data/reviews';
-import { getTravelTimes } from '@/data/routing';
+import { getTravelTimes, getIsochrone } from '@/data/routing';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
@@ -64,6 +64,8 @@ const Index = () => {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [discoverError, setDiscoverError] = useState<string | null>(null);
+  const [isochrone, setIsochrone] = useState<unknown | null>(null);
+  const [showIsochrone, setShowIsochrone] = useState(true);
 
   // How far the travel-time filter reaches, in metres.
   // Keeps the fetch radius consistent with what the filter will allow through.
@@ -154,6 +156,19 @@ const Index = () => {
       setIsDiscovering(false);
     }
   };
+
+  // Redraw the reachable-area polygon whenever location or travel settings change
+  useEffect(() => {
+    if (!userLocation || !showIsochrone) {
+      setIsochrone(null);
+      return;
+    }
+    let cancelled = false;
+    getIsochrone(userLocation, filters.withinMinutes, filters.transportMode)
+      .then(geo => { if (!cancelled) setIsochrone(geo); })
+      .catch(() => { if (!cancelled) setIsochrone(null); });
+    return () => { cancelled = true; };
+  }, [userLocation, filters.withinMinutes, filters.transportMode, showIsochrone]);
 
   // Curated (mock) places run through the full filter pipeline
   const curatedPlaces = getMockPlaces({ ...filters, sortBy });
@@ -629,7 +644,21 @@ const Index = () => {
             selectedPlace={selectedPlace}
             onSelectPlace={(id) => setSelectedPlace(selectedPlace === id ? null : id)}
             userLocation={userLocation}
+            isochrone={isochrone}
           />
+
+          {/* Reachable-area toggle */}
+          {userLocation && (
+            <Button
+              variant={showIsochrone ? 'default' : 'outline'}
+              onClick={() => setShowIsochrone(v => !v)}
+              className="absolute top-4 left-4 z-10 gap-2 shadow-medium"
+              title="Show the area reachable within your travel-time filter"
+            >
+              <Navigation className="h-4 w-4" />
+              {filters.withinMinutes} min {filters.transportMode === 'walking' ? 'walk' : 'drive'} zone
+            </Button>
+          )}
         </div>
       </div>
 

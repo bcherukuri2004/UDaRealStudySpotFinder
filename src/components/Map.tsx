@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Place } from '@/data/mockPlaces';
@@ -8,6 +8,7 @@ interface MapProps {
   selectedPlace: string | null;
   onSelectPlace: (id: string) => void;
   userLocation?: { lat: number; lng: number } | null;
+  isochrone?: unknown | null;
 }
 
 // Color each pin by place type
@@ -35,10 +36,11 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
-const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLocation }) => {
+const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLocation, isochrone }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<Record<string, maplibregl.Marker>>({});
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Initialize the map once
   useEffect(() => {
@@ -50,6 +52,8 @@ const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLoc
       center: [-122.158, 37.432], // Stanford / Palo Alto
       zoom: 13.5,
     });
+
+    map.current.on('load', () => setMapLoaded(true));
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
@@ -94,6 +98,55 @@ const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLoc
       markers.current[place.id] = marker;
     });
   }, [places, onSelectPlace]);
+
+  // Draw / update / remove the reachable-area polygon
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapLoaded) return;
+
+    const SRC = 'isochrone-src';
+    const FILL = 'isochrone-fill';
+    const LINE = 'isochrone-line';
+
+    // No data → tear down any existing layers
+    if (!isochrone) {
+      if (m.getLayer(FILL)) m.removeLayer(FILL);
+      if (m.getLayer(LINE)) m.removeLayer(LINE);
+      if (m.getSource(SRC)) m.removeSource(SRC);
+      return;
+    }
+
+    const data = isochrone as GeoJSON.FeatureCollection;
+
+    const existing = m.getSource(SRC) as maplibregl.GeoJSONSource | undefined;
+    if (existing) {
+      existing.setData(data); // update in place — cheaper than rebuilding
+      return;
+    }
+
+    m.addSource(SRC, { type: 'geojson', data });
+
+    m.addLayer({
+      id: FILL,
+      type: 'fill',
+      source: SRC,
+      paint: {
+        'fill-color': '#f97316',
+        'fill-opacity': 0.12,
+      },
+    });
+
+    m.addLayer({
+      id: LINE,
+      type: 'line',
+      source: SRC,
+      paint: {
+        'line-color': '#f97316',
+        'line-width': 2,
+        'line-dasharray': [2, 2],
+      },
+    });
+  }, [isochrone, mapLoaded]);
 
   // Fly to the user's location once we have it
   useEffect(() => {

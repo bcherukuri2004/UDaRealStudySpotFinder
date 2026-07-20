@@ -30,6 +30,7 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_DESTINATIONS = 50;
 
 const cache = new Map<string, { at: number; result: TravelResult }>();
+const isochroneCache = new Map<string, { at: number; geojson: unknown }>();
 
 const keyFor = (origin: Coords, dests: Coords[], mode: TravelMode) =>
   `${mode}|${origin.lat.toFixed(4)},${origin.lng.toFixed(4)}|` +
@@ -88,5 +89,43 @@ export const getTravelTimes = async (
     return result;
   } catch {
     return null; // network/quota failure — caller falls back to estimates
+  }
+};
+
+/**
+ * Get the "reachable area" polygon — everywhere you can get to within
+ * `minutes` by the given mode, following real roads.
+ *
+ * Returns GeoJSON (a FeatureCollection with a Polygon), or null on failure
+ * so the map can simply skip drawing it.
+ */
+export const getIsochrone = async (
+  origin: Coords,
+  minutes: number,
+  mode: TravelMode
+): Promise<unknown | null> => {
+  const cacheKey = `${mode}|${minutes}|${origin.lat.toFixed(4)},${origin.lng.toFixed(4)}`;
+
+  const hit = isochroneCache.get(cacheKey);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.geojson;
+
+  try {
+    const res = await fetch(`/ors/v2/isochrones/${PROFILE[mode]}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        locations: [[origin.lng, origin.lat]], // ORS wants [lng, lat]
+        range: [Math.round(minutes * 60)],     // seconds
+        range_type: 'time',
+      }),
+    });
+
+    if (!res.ok) return null;
+
+    const geojson = await res.json();
+    isochroneCache.set(cacheKey, { at: Date.now(), geojson });
+    return geojson;
+  } catch {
+    return null;
   }
 };
