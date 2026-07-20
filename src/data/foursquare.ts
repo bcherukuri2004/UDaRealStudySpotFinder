@@ -48,13 +48,51 @@ const toPlace = (r: FoursquareResult): Place => ({
   isDiscovered: true,   // flag: came from Foursquare, not curated mock data
 });
 
-// Fetch real work-friendly places near a given coordinate via our dev proxy
+// ---------- Quota protection ----------
+// Every API call costs quota, so we cache results and throttle bursts.
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // reuse results for 5 minutes
+const MIN_INTERVAL_MS = 2000;       // at most one live call every 2s
+const MAX_LIMIT = 20;
+const MAX_RADIUS_M = 5000;
+
+const cache = new Map<string, { at: number; places: Place[] }>();
+let lastCallAt = 0;
+
+// Round coords to ~100m so tiny GPS jitter still hits the same cache entry
+const cacheKey = (lat: number, lng: number) =>
+  `${lat.toFixed(3)},${lng.toFixed(3)}`;
+
+/**
+ * Fetch real work-friendly places near a coordinate via our proxy.
+ * Results are cached and calls are throttled to protect API quota.
+ */
 export const fetchNearbyPlaces = async (lat: number, lng: number): Promise<Place[]> => {
+  // Validate inputs before spending a request
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) ||
+      lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    throw new Error('Invalid coordinates');
+  }
+
+  const key = cacheKey(lat, lng);
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+    return hit.places; // served from cache — no API call, no quota used
+  }
+
+  // Throttle: refuse to hammer the API on rapid repeat clicks
+  const sinceLast = Date.now() - lastCallAt;
+  if (sinceLast < MIN_INTERVAL_MS) {
+    if (hit) return hit.places;            // stale cache beats a burst
+    throw new Error('Please wait a moment before searching again.');
+  }
+  lastCallAt = Date.now();
+
   const params = new URLSearchParams({
     ll: `${lat},${lng}`,
     query: 'cafe coffee library coworking',
-    limit: '20',
-    radius: '2000',
+    limit: String(MAX_LIMIT),
+    radius: String(MAX_RADIUS_M),
   });
 
   const res = await fetch(`/fsq/places/search?${params.toString()}`);
@@ -63,5 +101,8 @@ export const fetchNearbyPlaces = async (lat: number, lng: number): Promise<Place
   }
 
   const data = await res.json();
-  return (data.results as FoursquareResult[]).map(toPlace);
+  const places = (data.results as FoursquareResult[]).map(toPlace);
+
+  cache.set(key, { at: Date.now(), places });
+  return places;
 };

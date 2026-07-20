@@ -12,8 +12,10 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 3000,
       proxy: {
-        // Browser calls /fsq/... -> Vite forwards to Foursquare with the secret key attached
-        "/fsq": {
+        // SECURITY: scoped to the single endpoint we actually use.
+        // A broad "/fsq" rule would let anyone pipe arbitrary requests
+        // through our API key. Only /fsq/places/search is forwarded.
+        "/fsq/places/search": {
           target: "https://places-api.foursquare.com",
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/fsq/, ""),
