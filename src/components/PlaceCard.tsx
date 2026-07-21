@@ -38,6 +38,7 @@ interface PlaceCardProps {
     photo_url?: string;
     isDiscovered?: boolean;
     reviewCount?: number;
+    isUserAdded?: boolean;
   };
   onSelect?: (placeId: string) => void;
   transportMode?: 'walking' | 'driving';
@@ -154,7 +155,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                   {isOpenNow(place.hours) ? "Open" : "Closed"}
                 </Badge>
               )}
-              {place.isDiscovered && !(place.reviewCount ?? 0) && (
+              {place.isUserAdded && (
+                <Badge variant="outline" className="ml-2 text-xs shrink-0 border-green-600/50 text-green-700 dark:text-green-500">
+                  Community
+                </Badge>
+              )}
+              {place.isDiscovered && !place.isUserAdded && !(place.reviewCount ?? 0) && (
                 <Badge variant="outline" className="ml-2 text-xs shrink-0">
                   New
                 </Badge>

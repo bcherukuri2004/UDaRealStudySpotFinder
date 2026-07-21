@@ -13,11 +13,13 @@ import { fetchNearbyPlaces } from '@/data/foursquare';
 import ReviewForm from '@/components/ReviewForm';
 import { fetchRatings, fetchReviewsForPlace, externalIdFor, CrowdRating, Review } from '@/data/reviews';
 import { getTravelTimes, getIsochrone } from '@/data/routing';
+import AddSpotForm from '@/components/AddSpotForm';
+import { fetchUserPlaces } from '@/data/userPlaces';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
-  X, Search, Moon, Sun, Utensils, LocateFixed, Loader2, Sparkles
+  X, Search, Moon, Sun, Utensils, LocateFixed, Loader2, Sparkles, Plus
 } from 'lucide-react';
 
 const DEFAULT_FILTERS = {
@@ -66,6 +68,21 @@ const Index = () => {
   const [discoverError, setDiscoverError] = useState<string | null>(null);
   const [isochrone, setIsochrone] = useState<unknown | null>(null);
   const [showIsochrone, setShowIsochrone] = useState(true);
+
+  // Bumped whenever data changes (new review, new spot) to trigger refetches
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // ---- Community-added spots ----
+  const [userPlaces, setUserPlaces] = useState<Place[]>([]);
+  const [showAddSpot, setShowAddSpot] = useState(false);
+  const [isPicking, setIsPicking] = useState(false);
+  const [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Load community spots on mount, and again after one is added
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    fetchUserPlaces().then(setUserPlaces).catch(() => {});
+  }, [refreshKey]);
 
   // How far the travel-time filter reaches, in metres.
   // Keeps the fetch radius consistent with what the filter will allow through.
@@ -186,8 +203,13 @@ const Index = () => {
         p.travel_time[travelKey] <= filters.withinMinutes
       );
 
-  // Blend: curated (rated) first, then discovered (unrated)
-  const combined = [...curatedPlaces, ...discoveredFiltered];
+  // Community spots: filtered only by type (no amenity/price data to filter on)
+  const userFiltered = isSearching
+    ? userPlaces
+    : userPlaces.filter(p => p.types.some(t => filters.types.includes(t)));
+
+  // Blend: curated (rated) → community-added → discovered
+  const combined = [...curatedPlaces, ...userFiltered, ...discoveredFiltered];
   const rawPlaces = searchQuery.trim()
     ? combined.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -198,7 +220,6 @@ const Index = () => {
   const [crowdRatings, setCrowdRatings] = useState<Record<string, CrowdRating>>({});
   const [reviewTarget, setReviewTarget] = useState<Place | null>(null);
   const [placeReviews, setPlaceReviews] = useState<Review[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Overlay real crowd ratings on top of whatever data a place shipped with.
   // Human reviews always win over demo/placeholder numbers.
@@ -384,6 +405,15 @@ const Index = () => {
                 <LocateFixed className="h-5 w-5 mr-2" />
               )}
               {isDiscovering ? 'Finding spots near you…' : 'Discover real places near me'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => { setShowAddSpot(true); setIsPicking(true); }}
+              disabled={!isSupabaseConfigured}
+              className="w-full justify-start text-base h-11 mt-2"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Add a spot that's missing
             </Button>
             {discoverError && (
               <p className="text-sm text-destructive mt-2">{discoverError}</p>
@@ -645,6 +675,9 @@ const Index = () => {
             onSelectPlace={(id) => setSelectedPlace(selectedPlace === id ? null : id)}
             userLocation={userLocation}
             isochrone={isochrone}
+            pickingLocation={isPicking}
+            onPickLocation={(lat, lng) => { setPickedLocation({ lat, lng }); setIsPicking(false); }}
+            pickedLocation={pickedLocation}
           />
 
           {/* Reachable-area toggle */}
@@ -676,6 +709,18 @@ const Index = () => {
         place={reviewTarget}
         onClose={() => setReviewTarget(null)}
         onSubmitted={() => setRefreshKey(k => k + 1)}
+      />
+
+      {/* Add a community spot */}
+      <AddSpotForm
+        open={showAddSpot}
+        onClose={() => { setShowAddSpot(false); setIsPicking(false); setPickedLocation(null); }}
+        onAdded={() => setRefreshKey(k => k + 1)}
+        picked={pickedLocation}
+        onStartPicking={() => setIsPicking(true)}
+        isPicking={isPicking}
+        userLocation={userLocation}
+        onUseMyLocation={() => { if (userLocation) { setPickedLocation(userLocation); setIsPicking(false); } }}
       />
     </div>
   );

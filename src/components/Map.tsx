@@ -9,6 +9,11 @@ interface MapProps {
   onSelectPlace: (id: string) => void;
   userLocation?: { lat: number; lng: number } | null;
   isochrone?: unknown | null;
+  /** When true, clicking the map reports coordinates instead of doing nothing. */
+  pickingLocation?: boolean;
+  onPickLocation?: (lat: number, lng: number) => void;
+  /** A provisional pin shown while the user is choosing a spot's location. */
+  pickedLocation?: { lat: number; lng: number } | null;
 }
 
 // Color each pin by place type
@@ -36,11 +41,22 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
-const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLocation, isochrone }) => {
+const Map: React.FC<MapProps> = ({
+  places, selectedPlace, onSelectPlace, userLocation, isochrone,
+  pickingLocation, onPickLocation, pickedLocation,
+}) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<Record<string, maplibregl.Marker>>({});
+  const pickMarker = useRef<maplibregl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Keep the latest picking props in refs so the map's click handler
+  // (registered once) always sees current values instead of stale ones.
+  const pickingRef = useRef(pickingLocation);
+  const onPickRef = useRef(onPickLocation);
+  pickingRef.current = pickingLocation;
+  onPickRef.current = onPickLocation;
 
   // Initialize the map once
   useEffect(() => {
@@ -54,6 +70,14 @@ const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLoc
     });
 
     map.current.on('load', () => setMapLoaded(true));
+
+    // Single click handler for the map's whole lifetime; it reads the refs
+    // above so it never acts on stale prop values.
+    map.current.on('click', (e) => {
+      if (pickingRef.current) {
+        onPickRef.current?.(e.lngLat.lat, e.lngLat.lng);
+      }
+    });
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
@@ -147,6 +171,30 @@ const Map: React.FC<MapProps> = ({ places, selectedPlace, onSelectPlace, userLoc
       },
     });
   }, [isochrone, mapLoaded]);
+
+  // Crosshair cursor while the user is choosing a location
+  useEffect(() => {
+    const canvas = map.current?.getCanvas();
+    if (canvas) canvas.style.cursor = pickingLocation ? 'crosshair' : '';
+  }, [pickingLocation, mapLoaded]);
+
+  // Provisional pin for the spot being added
+  useEffect(() => {
+    if (!map.current) return;
+
+    pickMarker.current?.remove();
+    pickMarker.current = null;
+
+    if (!pickedLocation) return;
+
+    const el = document.createElement('div');
+    el.className = 'ss-marker ss-marker-selected';
+    el.style.setProperty('--marker-color', '#16a34a'); // green = new spot
+
+    pickMarker.current = new maplibregl.Marker({ element: el })
+      .setLngLat([pickedLocation.lng, pickedLocation.lat])
+      .addTo(map.current);
+  }, [pickedLocation]);
 
   // Fly to the user's location once we have it
   useEffect(() => {
