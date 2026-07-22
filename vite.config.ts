@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       host: "::",
-      port: 3000,
+      port: 3001,
+      strictPort: true, // fail loudly on a conflict instead of silently using another port
       proxy: {
         // SECURITY: scoped to the single endpoint we actually use.
         // A broad "/fsq" rule would let anyone pipe arbitrary requests
