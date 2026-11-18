@@ -66,3 +66,55 @@ describe("DiscoverView", () => {
     expect(screen.getByText("Location permission denied.")).toBeInTheDocument();
   });
 });
+
+describe("DiscoverView layout", () => {
+  const three = [
+    makePlace({ id: "a", name: "Alpha" }),
+    makePlace({ id: "b", name: "Bravo" }),
+    makePlace({ id: "c", name: "Charlie" }),
+  ];
+  const variants = (container: HTMLElement) =>
+    [...container.querySelectorAll("[data-variant]")].map((n) => n.getAttribute("data-variant"));
+
+  it("shows the editorial heading", () => {
+    render(withExplore(<DiscoverView />, makeExplore()));
+    expect(screen.getByRole("heading", { level: 1, name: "Choose your space." })).toBeInTheDocument();
+  });
+
+  it("first place is the hero and the rest are tiles, in order", () => {
+    const { container } = render(withExplore(<DiscoverView />, makeExplore({ places: three })));
+    expect(variants(container)).toEqual(["hero", "tile", "tile"]);
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Alpha", "Bravo", "Charlie"]);
+  });
+
+  it("one place gives a hero and no tile grid", () => {
+    const { container } = render(withExplore(<DiscoverView />, makeExplore({ places: [three[0]] })));
+    expect(variants(container)).toEqual(["hero"]);
+  });
+
+  it("zero places gives no hero and no crash", () => {
+    const { container } = render(withExplore(<DiscoverView />, makeExplore({ places: [] })));
+    expect(variants(container)).toEqual([]);
+  });
+
+  it("filters button shows the active-filter count and opens the panel", async () => {
+    const ctx = makeExplore({ activeFilterCount: 3 });
+    render(withExplore(<DiscoverView />, ctx));
+    const btn = screen.getByRole("button", { name: /Filters & Preferences/ });
+    expect(btn).toHaveTextContent("3");
+    await userEvent.click(btn);
+    expect(ctx.openFilters).toHaveBeenCalled();
+  });
+
+  it("changing sort calls setSortBy", async () => {
+    const ctx = makeExplore();
+    render(withExplore(<DiscoverView />, ctx));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Sort by" }), "quietest");
+    expect(ctx.setSortBy).toHaveBeenCalledWith("quietest");
+  });
+
+  it("marks the selected card", () => {
+    render(withExplore(<DiscoverView />, makeExplore({ places: three, selectedPlace: "b" })));
+    expect(screen.getByRole("button", { name: "Bravo, selected" })).toHaveAttribute("aria-pressed", "true");
+  });
+});

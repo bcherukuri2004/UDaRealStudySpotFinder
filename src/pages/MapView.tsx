@@ -28,7 +28,7 @@ const MapView = () => {
             <Button
               variant={showIsochrone ? 'default' : 'outline'}
               onClick={toggleIsochrone}
-              className="absolute top-4 left-4 z-10 gap-2 shadow-medium"
+              className="absolute top-4 left-4 z-10 h-11 gap-2 rounded-full text-base shadow-medium"
               title="Show the area reachable within your travel-time filter"
             >
               <Navigation className="h-4 w-4" />

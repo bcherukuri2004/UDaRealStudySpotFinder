@@ -47,7 +47,6 @@ export const makeExplore = (over: Partial<ExploreContext> = {}): ExploreContext 
   canAddSpot: true,
   selectedPlace: null,
   toggleSelect: vi.fn(),
-  quietCount: 0,
   openCount: 0,
   userLocation: null,
   isochrone: null,

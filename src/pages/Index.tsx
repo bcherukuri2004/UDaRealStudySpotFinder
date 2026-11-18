@@ -244,9 +244,6 @@ const Index = () => {
   }, [selectedPlace, refreshKey]);
 
   const openPlaces = places.filter(p => isOpenNow(p.hours));
-  const topStudySpots = places.filter(p =>
-    p.amenities.wifi >= 4.5 && p.amenities.noise <= 2.0
-  );
 
   const expandedPlace = selectedPlace ? places.find(p => p.id === selectedPlace) : null;
 
@@ -298,7 +295,6 @@ const Index = () => {
     canAddSpot: isSupabaseConfigured,
     selectedPlace,
     toggleSelect,
-    quietCount: topStudySpots.length,
     openCount: openPlaces.length,
     userLocation,
     isochrone,

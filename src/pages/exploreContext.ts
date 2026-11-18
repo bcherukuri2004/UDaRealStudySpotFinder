@@ -33,7 +33,6 @@ export interface ExploreContext {
   canAddSpot: boolean;
   selectedPlace: string | null;
   toggleSelect: (id: string) => void;
-  quietCount: number;
   openCount: number;
   userLocation: LatLng | null;
   isochrone: unknown | null;
