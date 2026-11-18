@@ -118,7 +118,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Card className="h-full border-0 rounded-none">
           <CardHeader className="border-b border-border px-8 py-6">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold">Filters</CardTitle>
+              <CardTitle className="font-serif text-3xl font-semibold italic">Filters</CardTitle>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={onReset} className="text-base">
                   Reset Filters
@@ -133,7 +133,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <CardContent className="space-y-8 p-8">
             {/* Place Types */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Place Types</h3>
+              <h3 className="font-label text-base font-semibold mb-4">Place Types</h3>
               <div className="grid grid-cols-2 gap-3">
                 {placeTypes.map((type) => {
                   const IconComponent = type.icon;
@@ -156,7 +156,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
             {/* Transport Mode Toggle */}
             <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <h3 className="font-label text-base font-semibold mb-4 flex items-center gap-2">
                 <User className="h-5 w-5 text-muted-foreground" />
                 Transportation
               </h3>
@@ -198,7 +198,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
             {/* Price Range */}
             <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <h3 className="font-label text-base font-semibold mb-4 flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-muted-foreground" />
                 Price Range
               </h3>
@@ -225,7 +225,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
             {/* Travel Time */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Within Walking Distance</h3>
+              <h3 className="font-label text-base font-semibold mb-4">Within Walking Distance</h3>
               <div className="px-2">
                 <Slider
                   value={[filters.withinMinutes]}
@@ -245,7 +245,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
             {/* Noise Level */}
             <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <h3 className="font-label text-base font-semibold mb-4 flex items-center gap-2">
                 <Volume2 className="h-5 w-5 text-muted-foreground" />
                 Maximum Noise Level
               </h3>
@@ -272,7 +272,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
               return (
                 <div key={amenity.key}>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="font-label text-base font-semibold mb-4 flex items-center gap-2">
                     <IconComponent className="h-5 w-5 text-muted-foreground" />
                     {amenity.label}
                   </h3>
@@ -302,7 +302,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
             {/* Active Filters Summary */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Active Filters</h3>
+              <h3 className="font-label text-base font-semibold mb-4">Active Filters</h3>
               <div className="flex flex-wrap gap-2">
                 {filters.types.map((type) => (
                   <Badge key={type} variant="secondary" className="text-base px-3 py-1">

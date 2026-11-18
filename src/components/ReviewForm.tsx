@@ -70,7 +70,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ place, onClose, onSubmitted }) 
         {/* Header */}
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
-            <h2 className="text-2xl font-bold">Rate this spot</h2>
+            <h2 className="font-serif text-3xl font-semibold italic">Rate this spot</h2>
             <p className="text-base text-muted-foreground mt-0.5">{place.name}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10 shrink-0">
@@ -105,7 +105,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ place, onClose, onSubmitted }) 
                   </button>
                 ))}
               </div>
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <div className="flex justify-between text-sm text-muted-foreground mt-1">
                 <span>{low}</span>
                 <span>{high}</span>
               </div>
@@ -125,7 +125,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ place, onClose, onSubmitted }) 
               placeholder="Outlets are mostly along the back wall, gets busy after 3pm…"
               className="text-base"
             />
-            <p className="text-xs text-muted-foreground mt-1">{comment.length}/1000</p>
+            <p className="text-sm text-muted-foreground mt-1">{comment.length}/1000</p>
           </div>
 
           {/* Optional name */}
