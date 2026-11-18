@@ -1,6 +1,5 @@
 import { useOutletContext } from "react-router-dom";
 import type { Place, SortOption } from "@/data/mockPlaces";
-import type { Review } from "@/data/reviews";
 
 export type LatLng = { lat: number; lng: number };
 
@@ -32,13 +31,8 @@ export interface ExploreContext {
   handleSearchNearby: () => void;
   startAddSpot: () => void;
   canAddSpot: boolean;
-  canReview: boolean;
   selectedPlace: string | null;
   toggleSelect: (id: string) => void;
-  clearSelection: () => void;
-  expandedPlace: Place | null;
-  placeReviews: Review[];
-  openReview: (place: Place) => void;
   quietCount: number;
   openCount: number;
   userLocation: LatLng | null;

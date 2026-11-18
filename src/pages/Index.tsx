@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import FilterPanel from '@/components/FilterPanel';
+import SpotDetail from '@/components/SpotDetail';
 import { getMockPlaces, isOpenNow, SortOption, Place } from '@/data/mockPlaces';
 import { fetchNearbyPlaces } from '@/data/foursquare';
 import ReviewForm from '@/components/ReviewForm';
@@ -27,6 +28,7 @@ const DEFAULT_FILTERS = {
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('top-rated');
@@ -266,6 +268,13 @@ const Index = () => {
 
   const activeFilterCount = getActiveFilterCount();
 
+  // If a filter change removes the selected spot, close its detail instead of leaving a stale id.
+  const placeIdsKey = places.map(p => p.id).join('|');
+  useEffect(() => {
+    if (selectedPlace && !places.some(p => p.id === selectedPlace)) setSelectedPlace(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPlace, placeIdsKey]);
+
   const toggleSelect = (id: string) => setSelectedPlace(prev => (prev === id ? null : id));
 
   const explore: ExploreContext = {
@@ -284,15 +293,11 @@ const Index = () => {
     discoveredCount: discoveredPlaces.length,
     handleDiscover,
     handleSearchNearby,
-    startAddSpot: () => { setShowAddSpot(true); setIsPicking(true); },
+    // Picking happens on the map, so take the user there first.
+    startAddSpot: () => { navigate('/map'); setShowAddSpot(true); setIsPicking(true); },
     canAddSpot: isSupabaseConfigured,
-    canReview: isSupabaseConfigured,
     selectedPlace,
     toggleSelect,
-    clearSelection: () => setSelectedPlace(null),
-    expandedPlace: expandedPlace ?? null,
-    placeReviews,
-    openReview: setReviewTarget,
     quietCount: topStudySpots.length,
     openCount: openPlaces.length,
     userLocation,
@@ -307,6 +312,16 @@ const Index = () => {
   return (
     <div className="h-full">
       <Outlet context={explore} />
+
+      {/* Spot detail (shared by Discover and Map) */}
+      <SpotDetail
+        place={expandedPlace ?? null}
+        reviews={placeReviews}
+        transportMode={filters.transportMode}
+        canReview={isSupabaseConfigured}
+        onClose={() => setSelectedPlace(null)}
+        onRate={setReviewTarget}
+      />
 
       {/* Filter Panel */}
       <FilterPanel

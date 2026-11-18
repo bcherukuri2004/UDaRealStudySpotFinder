@@ -6,35 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { getHoursLabel, SortOption, Place } from '@/data/mockPlaces';
+import { SortOption } from '@/data/mockPlaces';
 import { useExplore } from '@/pages/exploreContext';
 import {
-  MapPin, Filter, Clock, Wifi, Volume2,
-  Star, Navigation, Zap, Armchair, DollarSign,
-  X, Search, LocateFixed, Loader2, Sparkles, Plus
+  MapPin, Filter, Volume2, Search, LocateFixed, Loader2, Plus
 } from 'lucide-react';
-
-const getNoiseLabel = (noise: number) => {
-  if (noise <= 1.5) return 'Very Quiet';
-  if (noise <= 2.5) return 'Quiet';
-  if (noise <= 3.5) return 'Moderate';
-  return 'Loud';
-};
-
-const getPriceLabel = (level: number) => '$'.repeat(level);
-
-const getDirectionsUrl = (place: Place | null) => {
-  if (!place) return '#';
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
-};
 
 const DiscoverView = () => {
   const {
     places, filters, resetFilters, activeFilterCount, openFilters,
     sortBy, setSortBy, searchQuery, setSearchQuery,
     isDiscovering, discoverError, discoveredCount, handleDiscover, handleSearchNearby,
-    startAddSpot, canAddSpot, canReview,
-    selectedPlace, toggleSelect, clearSelection, expandedPlace, placeReviews, openReview,
+    startAddSpot, canAddSpot,
+    selectedPlace, toggleSelect,
     quietCount,
   } = useExplore();
 
@@ -175,146 +159,6 @@ const DiscoverView = () => {
                         transportMode={filters.transportMode}
                         isSelected={selectedPlace === place.id}
                       />
-
-                      {/* Expanded detail panel */}
-                      {selectedPlace === place.id && expandedPlace && (
-                        <div className="mt-1 mb-2 rounded-xl border border-border bg-background p-5 space-y-4">
-                          {/* Address + hours */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-base font-medium text-foreground">{expandedPlace.address}</p>
-                              {!expandedPlace.isDiscovered && (
-                                <p className="text-sm text-muted-foreground mt-0.5">{getHoursLabel(expandedPlace.hours)}</p>
-                              )}
-                            </div>
-                            <Button variant="ghost" size="icon" className="shrink-0" onClick={clearSelection}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          {expandedPlace.isDiscovered && !(expandedPlace.reviewCount ?? 0) ? (
-                            /* Discovered place — no amenity data yet */
-                            <div className="rounded-lg border border-dashed border-border p-4 text-center">
-                              <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
-                              <p className="text-base font-medium">Not yet rated</p>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                No one's reviewed the WiFi, outlets, or noise here yet. Be the first to help others out!
-                              </p>
-                              <Button
-                                variant="outline"
-                                className="mt-3"
-                                onClick={() => openReview(expandedPlace)}
-                                disabled={!canReview}
-                              >
-                                Be the first to review
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                          {/* All amenity scores */}
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-                              <Wifi className="h-4 w-4 text-blue-500" />
-                              <div>
-                                <div className="text-xs text-muted-foreground">WiFi</div>
-                                <div className="text-base font-semibold">{expandedPlace.amenities.wifi}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-                              <Zap className="h-4 w-4 text-yellow-500" />
-                              <div>
-                                <div className="text-xs text-muted-foreground">Outlets</div>
-                                <div className="text-base font-semibold">{expandedPlace.amenities.outlets}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-                              <Volume2 className="h-4 w-4 text-green-500" />
-                              <div>
-                                <div className="text-xs text-muted-foreground">Noise</div>
-                                <div className="text-base font-semibold">{getNoiseLabel(expandedPlace.amenities.noise)}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-                              <Armchair className="h-4 w-4 text-purple-500" />
-                              <div>
-                                <div className="text-xs text-muted-foreground">Seating</div>
-                                <div className="text-base font-semibold">{expandedPlace.amenities.seating}</div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Rating + price row */}
-                          <div className="flex items-center gap-4 text-base">
-                            <div className="flex items-center gap-1.5">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span className="font-semibold">{expandedPlace.rating}</span>
-                              <span className="text-muted-foreground">rating</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <DollarSign className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-semibold">{getPriceLabel(expandedPlace.price_level)}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span>
-                                {filters.transportMode === 'walking'
-                                  ? `${expandedPlace.travel_time.walking_min} min walk`
-                                  : `${expandedPlace.travel_time.driving_min} min drive`}
-                              </span>
-                            </div>
-                          </div>
-                            </>
-                          )}
-
-                          {/* Community reviews */}
-                          {placeReviews.length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-sm font-semibold text-muted-foreground">
-                                {placeReviews.length} review{placeReviews.length === 1 ? '' : 's'}
-                              </p>
-                              {placeReviews.slice(0, 3).map(r => (
-                                <div key={r.id} className="rounded-lg bg-muted/40 p-3">
-                                  <p className="text-sm font-medium">
-                                    {r.author_name || 'Anonymous'}
-                                  </p>
-                                  {r.comment && (
-                                    <p className="text-sm text-muted-foreground mt-1">{r.comment}</p>
-                                  )}
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    WiFi {r.wifi} · Outlets {r.outlets} · Noise {r.noise} · Seating {r.seating}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Add a review (hidden when the empty-state button already offers it) */}
-                          {!(expandedPlace.isDiscovered && !(expandedPlace.reviewCount ?? 0)) && (
-                            <Button
-                              variant="outline"
-                              className="w-full gap-2"
-                              onClick={() => openReview(expandedPlace)}
-                              disabled={!canReview}
-                            >
-                              <Sparkles className="h-4 w-4" />
-                              Rate this spot
-                            </Button>
-                          )}
-
-                          {/* Directions button */}
-                          <a
-                            href={getDirectionsUrl(expandedPlace)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block w-full"
-                          >
-                            <Button className="w-full gap-2">
-                              <Navigation className="h-4 w-4" />
-                              Get Directions
-                            </Button>
-                          </a>
-                        </div>
-                      )}
                     </div>
                   ))
                 ) : (
