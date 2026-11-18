@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import DiscoverView from "./pages/DiscoverView";
+import MapView from "./pages/MapView";
 import NotFound from "./pages/NotFound";
 import AppShell from "./components/AppShell";
 import Events from "./pages/Events";
@@ -19,8 +21,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/map" element={<Index />} />
+            <Route element={<Index />}>
+              <Route path="/" element={<DiscoverView />} />
+              <Route path="/map" element={<MapView />} />
+            </Route>
             <Route path="/events" element={<Events />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

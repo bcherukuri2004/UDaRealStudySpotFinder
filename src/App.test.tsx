@@ -2,7 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 
 // The real Index pulls in MapLibre (needs WebGL); routing tests don't need it.
-vi.mock("@/pages/Index", () => ({ default: () => <p>explore page</p> }));
+vi.mock("@/pages/Index", async () => {
+  const { Outlet } = await import("react-router-dom");
+  return { default: () => <div data-testid="explore"><Outlet /></div> };
+});
+vi.mock("@/pages/DiscoverView", () => ({ default: () => <p>discover view</p> }));
+vi.mock("@/pages/MapView", () => ({ default: () => <p>map view</p> }));
 
 import App from "./App";
 
@@ -35,12 +40,12 @@ describe("App routes", () => {
     expect(screen.getByRole("heading", { name: /profile/i })).toBeInTheDocument();
   });
 
-  it("/ and /map both render the explore page inside the shell", () => {
+  it("/ renders the discover view and /map the map view, both inside the shell", () => {
     const { unmount } = renderAt("/");
-    expect(screen.getByText("explore page")).toBeInTheDocument();
+    expect(screen.getByText("discover view")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
     unmount();
     renderAt("/map");
-    expect(screen.getByText("explore page")).toBeInTheDocument();
+    expect(screen.getByText("map view")).toBeInTheDocument();
   });
 });
