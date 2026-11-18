@@ -16,6 +16,7 @@ import { getTravelTimes, getIsochrone } from '@/data/routing';
 import AddSpotForm from '@/components/AddSpotForm';
 import { fetchUserPlaces } from '@/data/userPlaces';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useDarkMode } from '@/hooks/useDarkMode';
 import {
   MapPin, Filter, Coffee, BookOpen, Clock, Wifi, Volume2,
   Star, Navigation, ExternalLink, Zap, Armchair, DollarSign,
@@ -41,14 +42,7 @@ const Index = () => {
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('top-rated');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -338,7 +332,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={toggleDarkMode}
                 className="h-11 w-11"
               >
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
