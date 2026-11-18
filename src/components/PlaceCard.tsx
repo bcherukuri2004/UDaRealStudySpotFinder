@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { getFallbackGradient } from '@/lib/placeVisual';
 import { isOpenNow, getHoursLabel, Hours } from '@/data/mockPlaces';
 import {
   Wifi,
@@ -8,9 +9,6 @@ import {
   Volume2,
   Armchair,
   Star,
-  Clock,
-  DollarSign,
-  MapPin,
   Sparkles,
   Users
 } from 'lucide-react';
@@ -22,6 +20,7 @@ interface PlaceCardProps {
     rating?: number;
     price_level?: number;
     address: string;
+    types?: string[];
     distance?: number;
     travel_time?: {
       walking_min: number;
@@ -43,61 +42,31 @@ interface PlaceCardProps {
   onSelect?: (placeId: string) => void;
   transportMode?: 'walking' | 'driving';
   isSelected?: boolean;
+  variant?: 'hero' | 'tile';
 }
+
+const AMENITY_ICONS = { wifi: Wifi, outlets: Zap, noise: Volume2, seating: Armchair } as const;
 
 const PlaceCard: React.FC<PlaceCardProps> = ({
   place,
   onSelect,
   transportMode = 'walking',
   isSelected = false,
+  variant = 'tile',
 }) => {
-  const amenityIcons = {
-    wifi: Wifi,
-    outlets: Zap,
-    noise: Volume2,
-    seating: Armchair,
-  };
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
+  const isHero = variant === 'hero';
+  const showPhoto = !!place.photo_url && failedPhoto !== place.photo_url;
+  const unrated = !!place.isDiscovered && !(place.reviewCount ?? 0);
+  const typeLabel = (place.types?.[0] ?? 'place').toUpperCase();
+  const minutes = place.travel_time
+    ? transportMode === 'walking' ? place.travel_time.walking_min : place.travel_time.driving_min
+    : null;
+  const subtitle = [typeLabel, minutes !== null ? `${minutes} MIN ${transportMode === 'walking' ? 'WALK' : 'DRIVE'}` : null]
+    .filter(Boolean)
+    .join(' · ');
 
-  const getAmenityColor = (type: string, score: number) => {
-    if (type === 'noise') {
-      if (score <= 2.0) return 'text-green-600';
-      if (score <= 3.5) return 'text-warning';
-      return 'text-destructive';
-    }
-    if (score >= 4.0) return `amenity-${type}`;
-    if (score >= 3.0) return 'text-warning';
-    return 'text-muted-foreground';
-  };
-
-  const getNoiseDescription = (noise?: number) => {
-    if (!noise) return '';
-    if (noise <= 2) return 'Very Quiet';
-    if (noise <= 3) return 'Quiet';
-    if (noise <= 4) return 'Moderate';
-    return 'Loud';
-  };
-
-  const formatBadgeLabel = (badge: string) =>
-    badge
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-
-  const renderPriceLevel = (level?: number) => {
-    if (!level) return null;
-    return (
-      <div className="flex items-center">
-        {Array.from({ length: 3 }, (_, i) => (
-          <DollarSign 
-            key={i} 
-            className={`h-3 w-3 ${
-              i < level ? 'text-foreground' : 'text-muted-foreground/40'
-            }`} 
-          />
-        ))}
-      </div>
-    );
-  };
+  const statusBadge = 'bg-background/90 text-foreground border-transparent text-sm';
 
   return (
     <Card
@@ -105,11 +74,10 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
       tabIndex={0}
       aria-pressed={isSelected}
       aria-label={`${place.name}${isSelected ? ', selected' : ''}`}
-      className={`hover:shadow-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-        isSelected
-          ? 'border-primary ring-2 ring-primary/30'
-          : 'border-border/50 hover:border-border'
-      }`}
+      data-variant={variant}
+      className={`group relative overflow-hidden rounded-3xl cursor-pointer outline-none transition-all duration-200 hover:shadow-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+        isHero ? 'h-80' : 'h-64'
+      } ${isSelected ? 'ring-2 ring-primary' : ''}`}
       onClick={() => onSelect?.(place.id)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -118,105 +86,81 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
         }
       }}
     >
-      <CardContent className="p-6">
-        <div className="flex gap-3">
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2.5">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-2xl font-semibold text-foreground truncate mb-1.5">
-                  {place.name}
-                </h3>
-                <div className="flex items-center gap-3 text-base text-muted-foreground">
-                  {place.rating && (
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-warning text-warning" />
-                      <span>{place.rating}</span>
-                    </div>
-                  )}
-                  {renderPriceLevel(place.price_level)}
-                  {place.travel_time && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {transportMode === 'walking' ? place.travel_time.walking_min : place.travel_time.driving_min}min {transportMode === 'walking' ? 'walk' : 'drive'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* Photo, or warm artwork when there is none (or it failed to load) */}
+      <div
+        data-fallback={showPhoto ? undefined : ''}
+        className="absolute inset-0"
+        style={{ background: getFallbackGradient(place.types) }}
+      >
+        {showPhoto && (
+          <img
+            src={place.photo_url}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={() => setFailedPhoto(place.photo_url ?? null)}
+          />
+        )}
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/0" />
 
-              {place.hours && !place.isDiscovered && (
-                <Badge
-                  variant={isOpenNow(place.hours) ? "default" : "secondary"}
-                  className="ml-2 text-xs shrink-0"
-                  title={getHoursLabel(place.hours)}
+      {/* Status badges */}
+      <div className="absolute left-4 top-4 right-4 flex flex-wrap items-center gap-2">
+        {place.hours && !place.isDiscovered && (
+          <Badge className={statusBadge} title={getHoursLabel(place.hours)}>
+            {isOpenNow(place.hours) ? 'Open' : 'Closed'}
+          </Badge>
+        )}
+        {place.isUserAdded && <Badge className={statusBadge}>Community</Badge>}
+        {place.isDiscovered && !place.isUserAdded && unrated && <Badge className={statusBadge}>New</Badge>}
+        {(place.reviewCount ?? 0) > 0 && (
+          <Badge className={`${statusBadge} gap-1`}>
+            <Users className="h-3 w-3" />
+            {place.reviewCount}
+          </Badge>
+        )}
+        {place.rating ? (
+          <Badge className={`${statusBadge} ml-auto gap-1`}>
+            <Star className="h-4 w-4 fill-warning text-warning" />
+            {place.rating}
+          </Badge>
+        ) : null}
+      </div>
+
+      {/* Text over the photo */}
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+        <h3
+          className={`font-serif italic font-semibold leading-tight line-clamp-2 break-words ${
+            isHero ? 'text-4xl' : 'text-2xl'
+          }`}
+        >
+          {place.name}
+        </h3>
+        <p className="font-label mt-1 truncate text-white/90">{subtitle}</p>
+
+        {unrated ? (
+          <p className="mt-2 flex items-center gap-2 text-base text-white/90">
+            <Sparkles className="h-4 w-4" />
+            Not yet rated — be the first to review
+          </p>
+        ) : place.amenities ? (
+          <div className="mt-3 flex gap-2">
+            {Object.entries(place.amenities).map(([type, score]) => {
+              const Icon = AMENITY_ICONS[type as keyof typeof AMENITY_ICONS];
+              if (!Icon || !score) return null;
+              return (
+                <span
+                  key={type}
+                  title={type === 'noise' ? `Noise: ${score.toFixed(1)}` : `${type}: ${score.toFixed(1)}`}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/50 bg-white/15"
                 >
-                  {isOpenNow(place.hours) ? "Open" : "Closed"}
-                </Badge>
-              )}
-              {place.isUserAdded && (
-                <Badge variant="outline" className="ml-2 text-xs shrink-0 border-green-600/50 text-green-700 dark:text-green-500">
-                  Community
-                </Badge>
-              )}
-              {place.isDiscovered && !place.isUserAdded && !(place.reviewCount ?? 0) && (
-                <Badge variant="outline" className="ml-2 text-xs shrink-0">
-                  New
-                </Badge>
-              )}
-              {(place.reviewCount ?? 0) > 0 && (
-                <Badge variant="outline" className="ml-2 text-xs shrink-0 gap-1">
-                  <Users className="h-3 w-3" />
-                  {place.reviewCount}
-                </Badge>
-              )}
-            </div>
-
-            {/* Amenity Scores — or "not yet rated" prompt if no data exists yet */}
-            {place.isDiscovered && !(place.reviewCount ?? 0) ? (
-              <div className="flex items-center gap-2 mb-2.5 text-base text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>Not yet rated — be the first to review</span>
-              </div>
-            ) : place.amenities && (
-              <div className="flex gap-2 mb-2.5 flex-wrap">
-                {Object.entries(place.amenities).map(([type, score]) => {
-                  const IconComponent = amenityIcons[type as keyof typeof amenityIcons];
-                  if (!IconComponent || !score) return null;
-
-                  return (
-                    <div
-                      key={type}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-base ${getAmenityColor(type, score)}`}
-                    >
-                      <IconComponent className="h-4 w-4" />
-                      <span className="font-medium">
-                        {type === 'noise' ? getNoiseDescription(score) : score.toFixed(1)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Badges */}
-            {place.badges && place.badges.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                {place.badges.map((badge, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="text-base px-3 py-1"
-                  >
-                    {formatBadgeLabel(badge)}
-                  </Badge>
-                ))}
-              </div>
-            )}
+                  <Icon className="h-4 w-4" />
+                </span>
+              );
+            })}
           </div>
-        </div>
-      </CardContent>
+        ) : null}
+      </div>
     </Card>
   );
 };
