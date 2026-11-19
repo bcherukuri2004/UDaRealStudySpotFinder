@@ -35,6 +35,7 @@ interface PlaceCardProps {
     };
     badges?: string[];
     photo_url?: string;
+    photo_illustrative?: boolean;
     isDiscovered?: boolean;
     reviewCount?: number;
     isUserAdded?: boolean;
@@ -103,6 +104,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
         )}
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/0" />
+      {showPhoto && place.photo_illustrative && (
+        <span className="absolute bottom-3 right-4 rounded-full bg-black/65 px-3 py-1 text-sm text-white">
+          Illustrative photo
+        </span>
+      )}
 
       {/* Status badges */}
       <div className="absolute left-4 top-4 right-4 flex flex-wrap items-center gap-2">

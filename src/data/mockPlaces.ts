@@ -25,6 +25,8 @@ export interface Place {
     driving_min: number;
   };
   photo_url?: string;
+  photo_illustrative?: boolean; // true when the photo is a stand-in, not the actual place
+  photo_credit?: { text: string; url: string }; // attribution required by the photo's licence
   isDiscovered?: boolean; // true if pulled live from Foursquare (no reviews yet)
   reviewCount?: number;   // how many crowd reviews this place has
   hasRealTravelTime?: boolean; // true if travel time came from real road routing
@@ -41,6 +43,8 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["cafe"],
     address: "538 Ramona St, Palo Alto, CA",
+    photo_url: "/placeholders/cafe-clifton-road.jpg",
+    photo_illustrative: true,
     hours: { open: 7, close: 21 },
     amenities: {
       wifi: 4.8,
@@ -63,6 +67,8 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "557 Escondido Mall, Stanford, CA",
+    photo_url: "/placeholders/real-green-library.jpg",
+    photo_credit: { text: "Photo: LPS.1 · CC0", url: "https://commons.wikimedia.org/wiki/File:Stanford_University_Green_Library_Bing_Wing.jpg" },
     hours: { open: 8, close: 23 },
     amenities: {
       wifi: 4.9,
@@ -85,6 +91,8 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["cafe"],
     address: "101 Forest Ave, Palo Alto, CA",
+    photo_url: "/placeholders/cafe-wooden-table.jpg",
+    photo_illustrative: true,
     hours: { open: 6, close: 19 },
     amenities: {
       wifi: 4.1,
@@ -107,6 +115,8 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "450 Jane Stanford Way, Stanford, CA",
+    photo_url: "/placeholders/real-meyer-library.jpg",
+    photo_credit: { text: "Photo: King of Hearts · CC BY-SA 3.0", url: "https://commons.wikimedia.org/wiki/File:Stanford_Meyer_Library_November_2012.jpg" },
     hours: { open: 0, close: 24 },
     amenities: {
       wifi: 4.8,
@@ -129,6 +139,8 @@ export const mockPlaces: Place[] = [
     price_level: 3,
     types: ["cafe"],
     address: "310 Pasteur Dr, Stanford, CA",
+    photo_url: "/placeholders/cafe-dieppe.jpg",
+    photo_illustrative: true,
     hours: { open: 6, close: 20 },
     amenities: {
       wifi: 4.0,
@@ -151,6 +163,8 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "459 Lagunita Dr, Stanford, CA",
+    photo_url: "/placeholders/real-tresidder-union.jpg",
+    photo_credit: { text: "Photo: Suiren2022 · CC BY-SA 4.0", url: "https://commons.wikimedia.org/wiki/File:Tresidder_Memorial_Union_outside.jpg" },
     hours: { open: 7, close: 24 },
     amenities: {
       wifi: 4.6,
@@ -173,6 +187,8 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["cafe"],
     address: "419 University Ave, Palo Alto, CA",
+    photo_url: "/placeholders/cafe-cathedral-view.jpg",
+    photo_illustrative: true,
     hours: { open: 7, close: 22 },
     amenities: {
       wifi: 3.7,
@@ -195,6 +211,8 @@ export const mockPlaces: Place[] = [
     price_level: 1,
     types: ["library"],
     address: "Crown Quadrangle, Stanford, CA",
+    photo_url: "/placeholders/library-loc-area-studies.jpg",
+    photo_illustrative: true,
     hours: { open: 8, close: 22 },
     amenities: {
       wifi: 4.9,
@@ -217,6 +235,8 @@ export const mockPlaces: Place[] = [
     price_level: 2,
     types: ["restaurant"],
     address: "369 California Ave, Palo Alto, CA",
+    photo_url: "/placeholders/restaurant-kernwood.jpg",
+    photo_illustrative: true,
     hours: { open: 11, close: 22 },
     amenities: {
       wifi: 3.5,
@@ -239,6 +259,8 @@ export const mockPlaces: Place[] = [
     price_level: 3,
     types: ["restaurant"],
     address: "27 University Ave, Palo Alto, CA",
+    photo_url: "/placeholders/restaurant-skyline.jpg",
+    photo_illustrative: true,
     hours: { open: 11, close: 21 },
     amenities: {
       wifi: 3.2,

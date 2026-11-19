@@ -54,6 +54,11 @@ const SpotDetail = ({ place, reviews, transportMode, canReview, onClose, onRate 
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+          {showPhoto && place.photo_illustrative && (
+            <span className="absolute left-4 top-4 rounded-full bg-black/65 px-3 py-1 text-sm text-white">
+              Illustrative photo
+            </span>
+          )}
           <Button
             variant="secondary"
             size="icon"
@@ -70,6 +75,14 @@ const SpotDetail = ({ place, reviews, transportMode, canReview, onClose, onRate 
             </p>
           </div>
         </div>
+
+        {showPhoto && place.photo_credit && (
+          <p className="px-6 pt-2 text-sm text-muted-foreground">
+            <a href={place.photo_credit.url} target="_blank" rel="noopener noreferrer" className="underline">
+              {place.photo_credit.text}
+            </a>
+          </p>
+        )}
 
         <div className="space-y-6 px-6 pt-6">
           {/* Rating / price / time */}

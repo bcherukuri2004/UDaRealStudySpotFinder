@@ -85,4 +85,22 @@ describe("PlaceCard", () => {
     );
     expect(screen.getByText("Bare")).toBeInTheDocument();
   });
+
+  it("labels stand-in photos as illustrative, but not real or missing photos", () => {
+    const url = "https://example.com/x.jpg";
+    const { rerender } = render(<PlaceCard place={makePlace({ photo_url: url, photo_illustrative: true })} />);
+    expect(screen.getByText("Illustrative photo")).toBeInTheDocument();
+    rerender(<PlaceCard place={makePlace({ photo_url: url })} />);
+    expect(screen.queryByText("Illustrative photo")).not.toBeInTheDocument();
+    rerender(<PlaceCard place={makePlace({ photo_illustrative: true })} />);
+    expect(screen.queryByText("Illustrative photo")).not.toBeInTheDocument();
+  });
+
+  it("drops the illustrative label when the photo fails to load", () => {
+    const { container } = render(
+      <PlaceCard place={makePlace({ photo_url: "https://example.com/x.jpg", photo_illustrative: true })} />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(screen.queryByText("Illustrative photo")).not.toBeInTheDocument();
+  });
 });

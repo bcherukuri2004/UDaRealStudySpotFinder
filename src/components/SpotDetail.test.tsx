@@ -92,4 +92,26 @@ describe("SpotDetail", () => {
     fireEvent.error(img);
     expect(r.container.querySelector("img")).toBeNull();
   });
+
+  it("shows the photo credit as a safe link, and the illustrative label for stand-ins", () => {
+    const credit = { text: "Photo: Jo · CC BY-SA 4.0", url: "https://commons.wikimedia.org/wiki/File:X.jpg" };
+    const url = "https://example.com/x.jpg";
+    const { rerender } = render(<SpotDetail {...base} place={makePlace({ photo_url: url, photo_credit: credit })} />);
+    const link = screen.getByRole("link", { name: credit.text });
+    expect(link).toHaveAttribute("href", credit.url);
+    expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+    expect(screen.queryByText("Illustrative photo")).not.toBeInTheDocument();
+    rerender(<SpotDetail {...base} place={makePlace({ photo_url: url, photo_illustrative: true })} />);
+    expect(screen.getByText("Illustrative photo")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: credit.text })).not.toBeInTheDocument();
+  });
+
+  it("hides the credit when the photo failed to load", () => {
+    const credit = { text: "Photo: Jo · CC0", url: "https://commons.wikimedia.org/wiki/File:X.jpg" };
+    const { container } = render(
+      <SpotDetail {...base} place={makePlace({ photo_url: "https://example.com/x.jpg", photo_credit: credit })} />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(screen.queryByRole("link", { name: credit.text })).not.toBeInTheDocument();
+  });
 });
