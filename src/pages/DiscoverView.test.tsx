@@ -76,9 +76,23 @@ describe("DiscoverView layout", () => {
   const variants = (container: HTMLElement) =>
     [...container.querySelectorAll("[data-variant]")].map((n) => n.getAttribute("data-variant"));
 
-  it("shows the editorial heading", () => {
-    render(withExplore(<DiscoverView />, makeExplore()));
-    expect(screen.getByRole("heading", { level: 1, name: "Choose your space." })).toBeInTheDocument();
+  it("shows the sticky-note heading on a cork board", () => {
+    const { container } = render(withExplore(<DiscoverView />, makeExplore()));
+    expect(screen.getByRole("heading", { level: 1, name: "Where are you working today?" })).toBeInTheDocument();
+    expect(container.querySelector(".board")).not.toBeNull();
+  });
+
+  it("alternates the tilt of the notes", () => {
+    const { container } = render(withExplore(<DiscoverView />, makeExplore({ places: three })));
+    const cards = [...container.querySelectorAll("[data-variant]")];
+    expect(cards[0]).toHaveClass("note-tilt-left");
+    expect(cards[1]).toHaveClass("note-tilt-right");
+    expect(cards[2]).toHaveClass("note-tilt-left");
+  });
+
+  it("uses no italics or monospace", () => {
+    const { container } = render(withExplore(<DiscoverView />, makeExplore({ places: three })));
+    expect(container.innerHTML).not.toMatch(/italic|font-mono|font-serif/);
   });
 
   it("first place is the hero and the rest are tiles, in order", () => {
