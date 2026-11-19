@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudySpot — Noticeboard mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cork:#c99a62; --cork-dark:#b4834d; --paper:#fffdf5; --ink:#1b2a41; --ink-soft:#4a5568;
+    --pin:#d62f3a; --sticky:#ffe66d; --mint:#bfe8cf; --pink:#ffc8d6; --sky:#bfe0f5; --navy:#1b2a41;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#2b2118;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink);padding:32px 16px 64px}
+  h1.page{font-family:'Permanent Marker',cursive;color:#fff;text-align:center;font-weight:400;font-size:32px;margin:0 0 4px}
+  p.sub{color:#d9c9b4;text-align:center;margin:0 0 28px;font-size:18px}
+  .row{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+  .phone{width:390px;height:820px;border-radius:38px;border:10px solid #111;overflow:hidden;position:relative;display:flex;flex-direction:column;background:var(--cork);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+  .label{color:#d9c9b4;text-align:center;margin:0 0 10px;font-size:16px;letter-spacing:.04em;text-transform:uppercase}
+  /* cork texture */
+  .board{background-color:var(--cork);
+    background-image:radial-gradient(rgba(90,55,20,.25) 1px,transparent 1.4px),radial-gradient(rgba(255,255,255,.18) 1px,transparent 1.4px);
+    background-size:7px 7px,11px 11px;background-position:0 0,3px 4px}
+  .topbar{background:var(--navy);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-family:'Permanent Marker',cursive;font-size:28px;letter-spacing:.02em}
+  .logo span{color:var(--sticky)}
+  .moon{width:44px;height:44px;border-radius:50%;border:2px solid #fff5;display:grid;place-items:center;font-size:20px}
+  .scroll{flex:1;overflow-y:auto;padding:18px 16px 24px}
+  .scroll::-webkit-scrollbar{display:none}
+  /* paper note */
+  .note{background:var(--paper);border-radius:3px;box-shadow:3px 4px 0 rgba(60,35,10,.35);position:relative;padding:14px;margin-bottom:26px}
+  .tilt-l{transform:rotate(-1.4deg)} .tilt-r{transform:rotate(1.2deg)}
+  .pin{position:absolute;top:-9px;left:50%;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a92,var(--pin) 55%,#8c1a22);box-shadow:1px 3px 3px rgba(0,0,0,.4);transform:translateX(-50%)}
+  .tape{position:absolute;top:-12px;left:22px;width:78px;height:24px;background:rgba(255,236,150,.8);transform:rotate(-4deg);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .photo{height:150px;border:6px solid #fff;outline:1px solid #0001;display:grid;place-items:center;color:#fff;font-size:15px;text-shadow:0 1px 3px rgba(0,0,0,.5);position:relative;margin-bottom:10px}
+  .photo.big{height:210px}
+  .photo small{position:absolute;bottom:6px;right:8px;opacity:.9;font-size:13px}
+  .g1{background:linear-gradient(135deg,#6b8f71,#2d4a3e)} .g2{background:linear-gradient(135deg,#d9825b,#8c3b1f)} .g3{background:linear-gradient(135deg,#7aa6c2,#2f5775)}
+  .name{font-family:'Permanent Marker',cursive;font-size:26px;line-height:1.1;margin:2px 0 4px}
+  .meta{font-size:16px;color:var(--ink-soft);margin:0 0 8px}
+  .stamps{display:flex;gap:8px;flex-wrap:wrap}
+  .stamp{border:2.5px solid var(--ink);border-radius:50%;width:54px;height:54px;display:grid;place-items:center;text-align:center;font-weight:700;font-size:11px;line-height:1.05;transform:rotate(-6deg);background:#fff0}
+  .stamp b{display:block;font-size:19px}
+  .stamp.yes{border-color:#1f7a4d;color:#1f7a4d} .stamp.no{border-color:#b3261e;color:#b3261e;text-decoration:line-through} .stamp.unk{border-style:dashed;color:var(--ink-soft);border-color:var(--ink-soft)}
+  .badge{position:absolute;top:10px;right:10px;background:var(--sticky);padding:5px 10px;font-weight:700;font-size:15px;transform:rotate(3deg);box-shadow:1px 2px 0 rgba(0,0,0,.25)}
+  .badge.green{background:var(--mint)}
+  .sticky{background:var(--sticky);padding:14px;box-shadow:3px 4px 0 rgba(60,35,10,.3);font-family:'Permanent Marker',cursive;font-size:26px;line-height:1.15;transform:rotate(-1.5deg);margin-bottom:22px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px}
+  .chip{background:var(--paper);border:2.5px solid var(--ink);padding:10px 16px;font-weight:700;font-size:17px;box-shadow:2px 3px 0 rgba(60,35,10,.4);border-radius:4px;min-height:44px}
+  .chip.on{background:var(--navy);color:#fff}
+  .search{background:var(--paper);border:2.5px solid var(--ink);padding:13px 14px;font-size:17px;border-radius:4px;margin-bottom:14px;color:var(--ink-soft);box-shadow:2px 3px 0 rgba(60,35,10,.4)}
+  nav.tabs{background:var(--navy);display:flex}
+  nav.tabs a{flex:1;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#d6dce8;font-size:15px;font-weight:700;gap:2px}
+  nav.tabs a.on{color:var(--sticky);box-shadow:inset 0 3px 0 var(--sticky)}
+  nav.tabs i{font-style:normal;font-size:22px}
+  .tally{font-family:'Permanent Marker',cursive;letter-spacing:2px;font-size:20px}
+  .addr{background:#f4efe0;border:2px dashed var(--ink-soft);padding:12px;font-size:18px;margin:8px 0 10px;word-break:break-word}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{flex:1;min-width:140px;text-align:center;padding:13px 10px;font-weight:700;font-size:17px;border:2.5px solid var(--ink);background:var(--paper);box-shadow:2px 3px 0 rgba(60,35,10,.45);border-radius:4px;min-height:48px}
+  .btn.dark{background:var(--navy);color:#fff}
+  .section{font-family:'Permanent Marker',cursive;font-size:22px;margin:4px 0 8px}
+  .review{background:var(--pink);padding:12px;margin-bottom:12px;font-size:17px;transform:rotate(.8deg);box-shadow:2px 3px 0 rgba(60,35,10,.3)}
+  .review.b{background:var(--sky);transform:rotate(-.8deg)}
+  .flyer-top{background:var(--paper);padding:16px 16px 10px;position:relative}
+  .date{position:absolute;top:-6px;left:-6px;background:var(--pin);color:#fff;width:76px;padding:6px 0;text-align:center;transform:rotate(-5deg);box-shadow:2px 3px 0 rgba(0,0,0,.3)}
+  .date b{display:block;font-size:30px;line-height:1}
+  .tear{display:flex;border-top:2px dashed var(--ink-soft);background:var(--paper)}
+  .tear div{flex:1;padding:10px 4px;text-align:center;font-size:15px;font-weight:700;border-right:2px dashed var(--ink-soft);writing-mode:vertical-rl;transform:rotate(180deg);height:116px;display:flex;align-items:center;justify-content:center}
+  .tear div:last-child{border-right:0}
+  .tear div.taken{opacity:.35;text-decoration:line-through}
+  .rsvp{background:var(--sticky);display:inline-block;padding:10px 16px;font-family:'Permanent Marker',cursive;font-size:20px;transform:rotate(-2deg);box-shadow:2px 3px 0 rgba(60,35,10,.35)}
+  .note-foot{font-size:14px;color:#e8d9c4;text-align:center;max-width:760px;margin:30px auto 0;line-height:1.5}
+</style>
+</head>
+<body>
+<h1 class="page">StudySpot — the Noticeboard</h1>
+<p class="sub">Mockup of direction A. Cork board, paper notes, tally marks, tear-off event flyers. Not final.</p>
+
+<div class="row">
+
+  <!-- DISCOVER -->
+  <div>
+    <p class="label">1 · Discover</p>
+    <div class="phone">
+      <div class="topbar"><div class="logo">study<span>spot</span></div><div class="moon">☾</div></div>
+      <div class="scroll board">
+        <div class="sticky">Where are you working today?</div>
+        <div class="search">🔍 Search by name, e.g. Tamper Room</div>
+        <div class="chips">
+          <span class="chip on">All spots</span><span class="chip">Wifi ✓</span><span class="chip">Outlets ✓</span><span class="chip">Quiet</span><span class="chip">Open now</span>
+        </div>
+
+        <div class="note tilt-l">
+          <div class="pin"></div>
+          <div class="badge">OPEN</div>
+          <div class="photo big g2">☕ cafe photo<small>photo by a student</small></div>
+          <div class="name">Coupa Café</div>
+          <p class="meta">538 Ramona St · 6 min walk</p>
+          <div class="stamps">
+            <div class="stamp yes"><div><b>✓</b>WIFI</div></div>
+            <div class="stamp yes"><div><b>✓</b>PLUGS</div></div>
+            <div class="stamp unk"><div><b>?</b>QUIET</div></div>
+            <div class="stamp no"><div><b>✗</b>LOO</div></div>
+          </div>
+        </div>
+
+        <div class="note tilt-r">
+          <div class="tape"></div>
+          <div class="badge green">NEW · 3 notes</div>
+          <div class="photo g1">📚 library photo<small>photo by Maya</small></div>
+          <div class="name">Green Library</div>
+          <p class="meta">557 Escondido Mall · 13 min walk</p>
+          <div class="stamps">
+            <div class="stamp yes"><div><b>✓</b>WIFI</div></div>
+            <div class="stamp yes"><div><b>✓</b>PLUGS</div></div>
+            <div class="stamp yes"><div><b>✓</b>QUIET</div></div>
+          </div>
+        </div>
+      </div>
+      <nav class="tabs"><a class="on"><i>📌</i>Board</a><a><i>🗺</i>Map</a><a><i>🎟</i>Events</a><a><i>🙂</i>Me</a></nav>
+    </div>
+  </div>
+
+  <!-- SPOT PAGE -->
+  <div>
+    <p class="label">2 · Spot page</p>
+    <div class="phone">
+      <div class="topbar"><div class="logo">study<span>spot</span></div><div class="moon">✕</div></div>
+      <div class="scroll board">
+        <div class="note tilt-l" style="padding-top:18px">
+          <div class="pin"></div>
+          <div class="photo big g2">☕ photo<small>+ add yours</small></div>
+          <div class="name" style="font-size:30px">Coupa Café</div>
+          <p class="meta">CAFÉ · 6 min walk · ★ 4.4</p>
+
+          <div class="section">Address</div>
+          <div class="addr">538 Ramona St, Palo Alto, CA 94301</div>
+          <div class="btnrow">
+            <div class="btn">📋 Copy address</div>
+            <div class="btn dark">View on Google Maps ↗</div>
+          </div>
+        </div>
+
+        <div class="note tilt-r">
+          <div class="tape"></div>
+          <div class="section">What people say</div>
+          <p class="meta" style="margin-bottom:10px">Tally of 14 people. Add yours and help the next person.</p>
+          <p style="margin:6px 0;font-size:18px"><b>Wifi</b> &nbsp;<span class="tally">||||&nbsp;||||&nbsp;||||</span> &nbsp;yes (12 of 14)</p>
+          <p style="margin:6px 0;font-size:18px"><b>Plugs</b> &nbsp;<span class="tally">||||&nbsp;||||&nbsp;|</span> &nbsp;yes (11 of 14)</p>
+          <p style="margin:6px 0;font-size:18px"><b>Quiet</b> &nbsp;<span class="tally">||</span> &nbsp;<i>not enough votes yet</i></p>
+          <div class="btn dark" style="margin-top:12px">✏️ Add my note</div>
+        </div>
+
+        <div class="review">“Outlets along the back wall. Gets busy after 3.” <br><b>— Sam</b></div>
+        <div class="review b">“Wifi dropped twice, otherwise great for reading.” <br><b>— Anonymous</b></div>
+      </div>
+      <nav class="tabs"><a class="on"><i>📌</i>Board</a><a><i>🗺</i>Map</a><a><i>🎟</i>Events</a><a><i>🙂</i>Me</a></nav>
+    </div>
+  </div>
+
+  <!-- EVENTS -->
+  <div>
+    <p class="label">3 · Events</p>
+    <div class="phone">
+      <div class="topbar"><div class="logo">study<span>spot</span></div><div class="moon">☾</div></div>
+      <div class="scroll board">
+        <div class="sticky" style="background:var(--mint)">Happening near you</div>
+
+        <div class="note tilt-r" style="padding:0">
+          <div class="pin"></div>
+          <div class="flyer-top" style="padding-top:22px">
+            <div class="date"><b>14</b>SAT</div>
+            <div style="margin-left:74px;min-height:62px">
+              <div class="name" style="font-size:28px">Quiet co-work morning</div>
+              <p class="meta">Coupa Café · 10am–1pm</p>
+            </div>
+            <p style="font-size:18px;margin:10px 0">Bring your laptop. No talking until noon, then coffee and snacks. Hosted by Priya.</p>
+            <span class="rsvp">I'm in! →</span>
+            <p class="meta" style="margin-top:10px">8 going · 4 spots left</p>
+          </div>
+          <div class="tear"><div class="taken">Priya</div><div class="taken">Sam</div><div class="taken">Jo</div><div>Your name</div><div>Your name</div><div>Your name</div></div>
+        </div>
+
+        <div class="note tilt-l">
+          <div class="tape"></div>
+          <div class="badge">Sun 15</div>
+          <div class="name">Finals week study hall</div>
+          <p class="meta">Green Library · 2pm–8pm · 22 going</p>
+          <div class="btn dark">See flyer</div>
+        </div>
+        <div class="btn" style="background:var(--sticky)">＋ Pin your own event</div>
+      </div>
+      <nav class="tabs"><a><i>📌</i>Board</a><a><i>🗺</i>Map</a><a class="on"><i>🎟</i>Events</a><a><i>🙂</i>Me</a></nav>
+    </div>
+  </div>
+
+</div>
+
+<p class="note-foot">What's different from before: a cork-board background with paper notes pinned on it; the marker-pen headline font for names; yes/no amenities as rubber-stamp circles (with dashed "?" until enough people confirm); votes shown as tally marks; events as flyers with tear-off RSVP strips; a copyable address and a Google Maps link instead of turn-by-turn directions. Body text uses Atkinson Hyperlegible, a font designed for low vision.</p>
+</body>
+</html>
