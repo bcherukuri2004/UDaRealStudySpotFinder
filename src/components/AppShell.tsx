@@ -10,7 +10,7 @@ const AppShell = () => {
   return (
     <div className="flex h-screen flex-col bg-background">
       <header className="flex flex-shrink-0 items-center justify-between border-b border-border bg-card/60 px-6 py-3">
-        <span className="font-serif text-3xl font-semibold italic">
+        <span className="font-marker text-3xl">
           studyspot<span className="text-primary">.</span>
         </span>
         <Button

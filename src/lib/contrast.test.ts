@@ -55,4 +55,11 @@ describe.each([
   it("muted-foreground on card >= 4.5", () => {
     expect(contrastRatio(token(b, "muted-foreground"), token(b, "card"))).toBeGreaterThanOrEqual(4.5);
   });
+  it.each(["sticky", "mint", "pink", "sky"])("ink text on --%s notes >= 4.5", (note) => {
+    expect(contrastRatio(token(b, "ink"), token(b, note))).toBeGreaterThanOrEqual(4.5);
+  });
+  it("stamp colours (success, destructive) on card >= 4.5", () => {
+    expect(contrastRatio(token(b, "success"), token(b, "card"))).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(token(b, "destructive"), token(b, "card"))).toBeGreaterThanOrEqual(4.5);
+  });
 });

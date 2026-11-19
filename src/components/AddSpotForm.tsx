@@ -68,7 +68,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({
       <div className="bg-card border border-border rounded-2xl shadow-strong w-full max-w-md pointer-events-auto max-h-[85vh] overflow-y-auto">
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
-            <h2 className="font-serif text-3xl font-semibold italic">Add a spot</h2>
+            <h2 className="font-marker text-3xl">Add a spot</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
               Know a place that isn't listed? Put it on the map.
             </p>

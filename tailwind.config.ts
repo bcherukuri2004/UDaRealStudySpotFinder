@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        serif: ["'Fraunces Variable'", "Georgia", "serif"],
-        mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+        sans: ["'Atkinson Hyperlegible'", "system-ui", "sans-serif"],
+        marker: ["'Permanent Marker'", "cursive"],
       },
       colors: {
         border: "hsl(var(--border))",

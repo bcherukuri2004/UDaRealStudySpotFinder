@@ -69,7 +69,7 @@ const SpotDetail = ({ place, reviews, transportMode, canReview, onClose, onRate 
             <X className="h-5 w-5" />
           </Button>
           <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-            <h2 className="break-words font-serif text-4xl font-semibold italic leading-tight">{place.name}</h2>
+            <h2 className="break-words font-marker text-4xl leading-tight">{place.name}</h2>
             <p className="font-label mt-2 break-words text-white/90">
               {typeLabel} · {place.address}
             </p>

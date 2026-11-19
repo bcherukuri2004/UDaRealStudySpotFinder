@@ -70,7 +70,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ place, onClose, onSubmitted }) 
         {/* Header */}
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
-            <h2 className="font-serif text-3xl font-semibold italic">Rate this spot</h2>
+            <h2 className="font-marker text-3xl">Rate this spot</h2>
             <p className="text-base text-muted-foreground mt-0.5">{place.name}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10 shrink-0">

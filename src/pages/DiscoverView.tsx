@@ -36,7 +36,7 @@ const DiscoverView = () => {
         <p className="font-label text-muted-foreground">
           {places.length} spots · {openCount} open now
         </p>
-        <h1 className="mt-1 font-serif text-5xl font-semibold italic leading-tight">
+        <h1 className="mt-1 font-marker text-5xl leading-tight">
           Choose your space.
         </h1>
 

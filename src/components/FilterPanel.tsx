@@ -118,7 +118,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <Card className="h-full border-0 rounded-none">
           <CardHeader className="border-b border-border px-8 py-6">
             <div className="flex items-center justify-between">
-              <CardTitle className="font-serif text-3xl font-semibold italic">Filters</CardTitle>
+              <CardTitle className="font-marker text-3xl">Filters</CardTitle>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={onReset} className="text-base">
                   Reset Filters

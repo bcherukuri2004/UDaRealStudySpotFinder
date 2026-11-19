@@ -136,7 +136,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
       {/* Text over the photo */}
       <div className="absolute inset-x-0 bottom-0 p-5 text-white">
         <h3
-          className={`font-serif italic font-semibold leading-tight line-clamp-2 break-words ${
+          className={`font-marker leading-tight line-clamp-2 break-words ${
             isHero ? 'text-4xl' : 'text-2xl'
           }`}
         >
