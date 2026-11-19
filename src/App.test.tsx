@@ -35,9 +35,9 @@ describe("App routes", () => {
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
   });
 
-  it("/profile shows its placeholder", () => {
+  it("/profile (the Me tab) shows its placeholder", () => {
     renderAt("/profile");
-    expect(screen.getByRole("heading", { name: /profile/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Me" })).toBeInTheDocument();
   });
 
   it("/ renders the discover view and /map the map view, both inside the shell", () => {

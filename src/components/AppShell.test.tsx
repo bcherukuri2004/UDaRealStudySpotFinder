@@ -22,7 +22,8 @@ const renderShell = () =>
 describe("AppShell", () => {
   it("renders the wordmark, the routed child and the nav", () => {
     renderShell();
-    expect(screen.getByText(/studyspot/)).toBeInTheDocument();
+    expect(screen.getByText("study")).toBeInTheDocument();
+    expect(screen.getByText("spot")).toBeInTheDocument();
     expect(screen.getByText("child page")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
   });

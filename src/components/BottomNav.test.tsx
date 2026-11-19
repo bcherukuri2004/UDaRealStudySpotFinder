@@ -14,7 +14,7 @@ describe("BottomNav", () => {
   it("shows the four tabs in a labelled nav", () => {
     renderAt("/");
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
-    for (const name of ["Discover", "Map", "Events", "Profile"]) {
+    for (const name of ["Board", "Map", "Events", "Me"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
   });
@@ -22,19 +22,19 @@ describe("BottomNav", () => {
   it("marks only the current route active", () => {
     renderAt("/map");
     expect(screen.getByRole("link", { name: "Map" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Discover" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current");
   });
 
-  it("Discover is not active on /map (exact match for root)", () => {
+  it("Board is not active on /map (exact match for root)", () => {
     renderAt("/map");
-    expect(screen.getByRole("link", { name: "Discover" })).not.toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current", "page");
   });
 
   it("clicking a tab changes the active tab", async () => {
     renderAt("/");
     await userEvent.click(screen.getByRole("link", { name: "Events" }));
     expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Discover" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Board" })).not.toHaveAttribute("aria-current");
   });
 
   it("keeps the touch-target floor (56px) on every tab", () => {

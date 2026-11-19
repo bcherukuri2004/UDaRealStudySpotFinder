@@ -1,14 +1,14 @@
-import { User as Icon } from "lucide-react";
+import { Smile as Icon } from "lucide-react";
 
 const Profile = () => (
-  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-    <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-      <Icon className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+  <div className="board flex h-full flex-col items-center justify-center px-6 text-center">
+    <div className="note note-tilt-left max-w-sm px-8 py-10">
+      <div className="pin" />
+      <Icon className="mx-auto mb-3 h-10 w-10" aria-hidden="true" />
+      <h1 className="font-marker text-4xl">Me</h1>
+      <p className="mt-2 text-lg text-muted-foreground">Your notes and RSVPs will live here.</p>
+      <p className="sticky-note mt-5 inline-block px-4 py-2 font-marker text-xl">Coming soon</p>
     </div>
-    <h1 className="font-marker text-4xl">Profile</h1>
-    <p className="mt-2 max-w-sm text-base text-muted-foreground">
-      Coming soon.
-    </p>
   </div>
 );
 

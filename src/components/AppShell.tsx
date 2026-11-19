@@ -9,16 +9,17 @@ const AppShell = () => {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      <header className="flex flex-shrink-0 items-center justify-between border-b border-border bg-card/60 px-6 py-3">
+      <header className="flex flex-shrink-0 items-center justify-between bg-[hsl(var(--ink))] px-5 py-3 text-white">
         <span className="font-marker text-3xl">
-          studyspot<span className="text-primary">.</span>
+          <span>study</span>
+          <span className="text-[hsl(var(--sticky))]">spot</span>
         </span>
         <Button
           variant="outline"
           size="icon"
           onClick={toggleDarkMode}
           aria-label="Toggle dark mode"
-          className="h-11 w-11"
+          className="h-11 w-11 border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
         >
           {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
