@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import AmenityStamps from '@/components/AmenityStamps';
 import { getFallbackGradient } from '@/lib/placeVisual';
 import { isOpenNow, getHoursLabel, Hours } from '@/data/mockPlaces';
-import {
-  Wifi,
-  Zap,
-  Volume2,
-  Armchair,
-  Star,
-  Sparkles,
-  Users
-} from 'lucide-react';
+import { Sparkles, Users } from 'lucide-react';
 
 interface PlaceCardProps {
   place: {
@@ -44,9 +35,8 @@ interface PlaceCardProps {
   transportMode?: 'walking' | 'driving';
   isSelected?: boolean;
   variant?: 'hero' | 'tile';
+  tilt?: 'left' | 'right' | 'none';
 }
-
-const AMENITY_ICONS = { wifi: Wifi, outlets: Zap, noise: Volume2, seating: Armchair } as const;
 
 const PlaceCard: React.FC<PlaceCardProps> = ({
   place,
@@ -54,31 +44,34 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   transportMode = 'walking',
   isSelected = false,
   variant = 'tile',
+  tilt = 'none',
 }) => {
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const isHero = variant === 'hero';
   const showPhoto = !!place.photo_url && failedPhoto !== place.photo_url;
   const unrated = !!place.isDiscovered && !(place.reviewCount ?? 0);
-  const typeLabel = (place.types?.[0] ?? 'place').toUpperCase();
+  const typeLabel = place.types?.[0] ?? 'place';
   const minutes = place.travel_time
     ? transportMode === 'walking' ? place.travel_time.walking_min : place.travel_time.driving_min
     : null;
-  const subtitle = [typeLabel, minutes !== null ? `${minutes} MIN ${transportMode === 'walking' ? 'WALK' : 'DRIVE'}` : null]
+  const meta = [
+    typeLabel,
+    minutes !== null ? `${minutes} min ${transportMode === 'walking' ? 'walk' : 'drive'}` : null,
+    place.rating ? `★ ${place.rating}` : null,
+  ]
     .filter(Boolean)
     .join(' · ');
 
-  const statusBadge = 'bg-background/90 text-foreground border-transparent text-sm';
-
   return (
-    <Card
+    <div
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
       aria-label={`${place.name}${isSelected ? ', selected' : ''}`}
       data-variant={variant}
-      className={`group relative overflow-hidden rounded-3xl cursor-pointer outline-none transition-all duration-200 hover:shadow-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-        isHero ? 'h-80' : 'h-64'
-      } ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      className={`note cursor-pointer p-3 outline-none focus-visible:ring-4 focus-visible:ring-[hsl(var(--sticky))] ${
+        tilt === 'left' ? 'note-tilt-left' : tilt === 'right' ? 'note-tilt-right' : ''
+      } ${isSelected ? 'ring-4 ring-[hsl(var(--ink))]' : ''}`}
       onClick={() => onSelect?.(place.id)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -87,10 +80,14 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
         }
       }}
     >
-      {/* Photo, or warm artwork when there is none (or it failed to load) */}
+      {isHero ? <div className="pin" /> : <div className="tape" />}
+
+      {/* White-framed photo, or a warm gradient when there is none (or it failed) */}
       <div
         data-fallback={showPhoto ? undefined : ''}
-        className="absolute inset-0"
+        className={`relative overflow-hidden border-[6px] border-white outline outline-1 outline-black/10 ${
+          isHero ? 'h-56' : 'h-40'
+        }`}
         style={{ background: getFallbackGradient(place.types) }}
       >
         {showPhoto && (
@@ -102,72 +99,51 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
             onError={() => setFailedPhoto(place.photo_url ?? null)}
           />
         )}
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/0" />
-      {showPhoto && place.photo_illustrative && (
-        <span className="absolute bottom-3 right-4 rounded-full bg-black/65 px-3 py-1 text-sm text-white">
-          Illustrative photo
-        </span>
-      )}
-
-      {/* Status badges */}
-      <div className="absolute left-4 top-4 right-4 flex flex-wrap items-center gap-2">
-        {place.hours && !place.isDiscovered && (
-          <Badge className={statusBadge} title={getHoursLabel(place.hours)}>
-            {isOpenNow(place.hours) ? 'Open' : 'Closed'}
-          </Badge>
+        {showPhoto && place.photo_illustrative && (
+          <span className="absolute bottom-2 right-2 rounded-full bg-black/65 px-3 py-1 text-sm text-white">
+            Illustrative photo
+          </span>
         )}
-        {place.isUserAdded && <Badge className={statusBadge}>Community</Badge>}
-        {place.isDiscovered && !place.isUserAdded && unrated && <Badge className={statusBadge}>New</Badge>}
-        {(place.reviewCount ?? 0) > 0 && (
-          <Badge className={`${statusBadge} gap-1`}>
-            <Users className="h-3 w-3" />
-            {place.reviewCount}
-          </Badge>
-        )}
-        {place.rating ? (
-          <Badge className={`${statusBadge} ml-auto gap-1`}>
-            <Star className="h-4 w-4 fill-warning text-warning" />
-            {place.rating}
-          </Badge>
-        ) : null}
+        {/* Status stickers */}
+        <div className="absolute left-2 top-2 flex flex-wrap gap-2">
+          {place.hours && !place.isDiscovered && (
+            <span className="sticky-badge" title={getHoursLabel(place.hours)}>
+              {isOpenNow(place.hours) ? 'Open' : 'Closed'}
+            </span>
+          )}
+          {place.isUserAdded && <span className="sticky-badge sticky-mint">Community</span>}
+          {place.isDiscovered && !place.isUserAdded && unrated && <span className="sticky-badge sticky-mint">New</span>}
+          {(place.reviewCount ?? 0) > 0 && (
+            <span className="sticky-badge sticky-sky inline-flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              {place.reviewCount}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Text over the photo */}
-      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+      <div className="px-1 pb-1 pt-3">
         <h3
           className={`font-marker leading-tight line-clamp-2 break-words ${
-            isHero ? 'text-4xl' : 'text-2xl'
+            isHero ? 'text-3xl' : 'text-2xl'
           }`}
         >
           {place.name}
         </h3>
-        <p className="font-label mt-1 truncate text-white/90">{subtitle}</p>
+        <p className="mt-1 truncate text-base text-muted-foreground">{meta}</p>
 
-        {unrated ? (
-          <p className="mt-2 flex items-center gap-2 text-base text-white/90">
-            <Sparkles className="h-4 w-4" />
-            Not yet rated — be the first to review
-          </p>
-        ) : place.amenities ? (
-          <div className="mt-3 flex gap-2">
-            {Object.entries(place.amenities).map(([type, score]) => {
-              const Icon = AMENITY_ICONS[type as keyof typeof AMENITY_ICONS];
-              if (!Icon || !score) return null;
-              return (
-                <span
-                  key={type}
-                  title={type === 'noise' ? `Noise: ${score.toFixed(1)}` : `${type}: ${score.toFixed(1)}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/50 bg-white/15"
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-              );
-            })}
-          </div>
-        ) : null}
+        <div className="mt-3">
+          {unrated ? (
+            <p className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4" />
+              Not yet rated — be the first to review
+            </p>
+          ) : place.amenities ? (
+            <AmenityStamps amenities={place.amenities} />
+          ) : null}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

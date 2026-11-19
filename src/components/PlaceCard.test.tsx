@@ -77,7 +77,7 @@ describe("PlaceCard", () => {
 
   it("shows travel time for the chosen mode and survives missing optional data", () => {
     const { rerender } = render(<PlaceCard place={makePlace()} transportMode="driving" />);
-    expect(screen.getByText(/2 MIN DRIVE/)).toBeInTheDocument();
+    expect(screen.getByText(/2 min drive/i)).toBeInTheDocument();
     rerender(
       <PlaceCard
         place={{ id: "bare", name: "Bare", address: "Nowhere" }}
@@ -102,5 +102,35 @@ describe("PlaceCard", () => {
     );
     fireEvent.error(container.querySelector("img")!);
     expect(screen.queryByText("Illustrative photo")).not.toBeInTheDocument();
+  });
+
+  it("shows amenity stamps for rated places and none for unrated ones", () => {
+    const { rerender } = render(<PlaceCard place={makePlace({ amenities: { wifi: 5, outlets: 1, noise: 1, seating: 3 } })} />);
+    expect(screen.getByLabelText("Wifi: yes")).toBeInTheDocument();
+    expect(screen.getByLabelText("Outlets: no")).toBeInTheDocument();
+    expect(screen.getByLabelText("Quiet: yes")).toBeInTheDocument();
+    rerender(<PlaceCard place={makePlace({ isDiscovered: true, reviewCount: 0 })} />);
+    expect(screen.queryByLabelText(/Wifi:/)).not.toBeInTheDocument();
+  });
+
+  it("applies the requested tilt and defaults to none", () => {
+    const { container, rerender } = render(<PlaceCard place={makePlace()} tilt="left" />);
+    expect(container.firstElementChild).toHaveClass("note-tilt-left");
+    rerender(<PlaceCard place={makePlace()} tilt="right" />);
+    expect(container.firstElementChild).toHaveClass("note-tilt-right");
+    rerender(<PlaceCard place={makePlace()} />);
+    expect(container.firstElementChild!.className).not.toMatch(/note-tilt/);
+  });
+
+  it("shows the rating with a star in the meta line and copes with a missing one", () => {
+    const { rerender } = render(<PlaceCard place={makePlace({ rating: 4.8 })} />);
+    expect(screen.getByText(/★ 4\.8/)).toBeInTheDocument();
+    rerender(<PlaceCard place={makePlace({ rating: undefined })} />);
+    expect(screen.queryByText(/★/)).not.toBeInTheDocument();
+  });
+
+  it("uses no italics or monospace", () => {
+    const { container } = render(<PlaceCard place={makePlace()} variant="hero" />);
+    expect(container.innerHTML).not.toMatch(/italic|font-mono/);
   });
 });
