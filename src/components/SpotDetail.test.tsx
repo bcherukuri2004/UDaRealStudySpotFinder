@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import SpotDetail from "./SpotDetail";
@@ -24,13 +24,77 @@ describe("SpotDetail", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("shows name, rating and an encoded Google Maps link", () => {
-    render(<SpotDetail {...base} place={makePlace({ name: "Bean There", address: "5 A&B St, Palo Alto" })} />);
-    expect(screen.getByRole("dialog", { name: "Bean There" })).toBeInTheDocument();
+  it("shows name, rating and a Google Maps place link (not directions)", () => {
+    render(<SpotDetail {...base} place={makePlace({ name: "Joe's & Sons #1", address: '5 "B" Café Rd' })} />);
+    expect(screen.getByRole("dialog", { name: "Joe's & Sons #1" })).toBeInTheDocument();
     expect(screen.getByText("4.5")).toBeInTheDocument();
-    const link = screen.getByRole("link", { name: /Open in Google Maps/ });
-    expect(link).toHaveAttribute("href", expect.stringContaining(encodeURIComponent("5 A&B St, Palo Alto")));
+    const link = screen.getByRole("link", { name: /View on Google Maps/ });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(`Joe's & Sons #1 5 "B" Café Rd`),
+    );
+    expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+    expect(screen.queryByRole("link", { name: /Open in Google Maps/ })).not.toBeInTheDocument();
+  });
+
+  it("writes the address out so it can be selected", () => {
+    render(<SpotDetail {...base} place={makePlace({ address: "538 Ramona St, Palo Alto, CA" })} />);
+    expect(screen.getByLabelText("Address")).toHaveTextContent("538 Ramona St, Palo Alto, CA");
+  });
+
+  describe("Copy address", () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    afterEach(() => {
+      if (original) Object.defineProperty(navigator, "clipboard", original);
+      else delete (navigator as unknown as Record<string, unknown>).clipboard;
+    });
+    const setClipboard = (value: unknown) =>
+      Object.defineProperty(navigator, "clipboard", { value, configurable: true });
+
+    it("copies the address and confirms", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      setClipboard({ writeText });
+      render(<SpotDetail {...base} place={makePlace({ address: "1 Main St" })} />);
+      await userEvent.click(screen.getByRole("button", { name: "Copy address" }));
+      expect(writeText).toHaveBeenCalledWith("1 Main St");
+      expect(await screen.findByRole("button", { name: "Copied!" })).toBeInTheDocument();
+    });
+
+    it("tells you to select it by hand when the clipboard is unavailable", async () => {
+      setClipboard(undefined);
+      render(<SpotDetail {...base} place={makePlace()} />);
+      await userEvent.click(screen.getByRole("button", { name: "Copy address" }));
+      expect(await screen.findByRole("status")).toHaveTextContent("Couldn't copy — select the address above");
+    });
+
+    it("shows the same message when the clipboard rejects", async () => {
+      setClipboard({ writeText: vi.fn().mockRejectedValue(new Error("denied")) });
+      render(<SpotDetail {...base} place={makePlace()} />);
+      await userEvent.click(screen.getByRole("button", { name: "Copy address" }));
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Couldn't copy"));
+    });
+
+    it("resets the Copied state when a different place is shown", async () => {
+      setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+      const { rerender } = render(<SpotDetail {...base} place={makePlace({ id: "a" })} />);
+      await userEvent.click(screen.getByRole("button", { name: "Copy address" }));
+      await screen.findByRole("button", { name: "Copied!" });
+      rerender(<SpotDetail {...base} place={makePlace({ id: "b", address: "Other" })} />);
+      expect(screen.getByRole("button", { name: "Copy address" })).toBeInTheDocument();
+    });
+  });
+
+  it("shows amenity stamps for a rated place", () => {
+    render(<SpotDetail {...base} place={makePlace({ amenities: { wifi: 5, outlets: 1, noise: 3, seating: 3 } })} />);
+    expect(screen.getByLabelText("Wifi: yes")).toBeInTheDocument();
+    expect(screen.getByLabelText("Outlets: no")).toBeInTheDocument();
+    expect(screen.getByLabelText("Quiet: not enough information")).toBeInTheDocument();
+  });
+
+  it("uses no italics or monospace", () => {
+    const { container } = render(<SpotDetail {...base} place={makePlace()} />);
+    expect(container.innerHTML).not.toMatch(/italic|font-mono|font-serif/);
   });
 
   it("shows travel time for the chosen mode", () => {
