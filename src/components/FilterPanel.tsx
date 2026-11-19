@@ -114,7 +114,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
-      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l border-border shadow-strong overflow-y-auto">
+      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-card border-l-[3px] border-foreground shadow-strong overflow-y-auto">
         <Card className="h-full border-0 rounded-none">
           <CardHeader className="border-b border-border px-8 py-6">
             <div className="flex items-center justify-between">

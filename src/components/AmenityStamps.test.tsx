@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import AmenityStamps, { stampState } from "./AmenityStamps";
+import AmenityStamps from "./AmenityStamps";
+import { stampState } from "@/lib/stampState";
 
 describe("stampState", () => {
   it.each([

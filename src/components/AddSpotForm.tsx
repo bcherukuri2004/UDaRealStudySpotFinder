@@ -65,7 +65,7 @@ const AddSpotForm: React.FC<AddSpotFormProps> = ({
   return (
     <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 pointer-events-none">
       {/* Panel is pointer-events-auto so the map behind stays clickable for picking */}
-      <div className="bg-card border border-border rounded-2xl shadow-strong w-full max-w-md pointer-events-auto max-h-[85vh] overflow-y-auto">
+      <div className="bg-card border-[3px] border-foreground rounded shadow-strong w-full max-w-md pointer-events-auto max-h-[85vh] overflow-y-auto">
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
             <h2 className="font-marker text-3xl">Add a spot</h2>

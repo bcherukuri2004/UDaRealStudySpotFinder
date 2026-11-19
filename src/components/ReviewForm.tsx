@@ -64,7 +64,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ place, onClose, onSubmitted }) 
       onClick={onClose}
     >
       <div
-        className="bg-card border border-border rounded-2xl shadow-strong w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-card border-[3px] border-foreground rounded shadow-strong w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

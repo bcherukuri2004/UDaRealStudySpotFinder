@@ -1,6 +1,5 @@
 import React from 'react';
 import Map from '@/components/Map';
-import { Button } from '@/components/ui/button';
 import { useExplore } from '@/pages/exploreContext';
 import { Navigation } from 'lucide-react';
 
@@ -25,15 +24,15 @@ const MapView = () => {
 
           {/* Reachable-area toggle */}
           {userLocation && (
-            <Button
-              variant={showIsochrone ? 'default' : 'outline'}
+            <button
               onClick={toggleIsochrone}
-              className="absolute top-4 left-4 z-10 h-11 gap-2 rounded-full text-base shadow-medium"
+              aria-pressed={showIsochrone}
+              className={`chip absolute top-4 left-4 z-10 gap-2 ${showIsochrone ? 'chip-dark' : ''}`}
               title="Show the area reachable within your travel-time filter"
             >
               <Navigation className="h-4 w-4" />
               {filters.withinMinutes} min {filters.transportMode === 'walking' ? 'walk' : 'drive'} zone
-            </Button>
+            </button>
           )}
         </div>
   );
